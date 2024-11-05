@@ -19,7 +19,6 @@
         <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.5.0.1" />
         <PackageReference Include="Semi.Avalonia" Version="11.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0-rc.2.24474.3" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0-rc.2.24474.3" />
     </ItemGroup>
 
     <ItemGroup>

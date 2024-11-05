@@ -7,7 +7,7 @@ builder.Services.AddSignalR()
                 .AddMessagePackProtocol();
 
 builder.Services.AddHostedService<MessageHubSendServer>();
-builder.Services.ConfigureOptions<MessagePackHubProtocolOptionSetup>();
+builder.Services.ConfigureOptions<JsonHubProtocolOptionSetup>();
 
 var app = builder.Build();
 
