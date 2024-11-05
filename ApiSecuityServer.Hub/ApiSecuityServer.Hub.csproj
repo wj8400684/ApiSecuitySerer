@@ -6,7 +6,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
         <AssemblyName>ApiSecuityServerHub</AssemblyName>
-        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>

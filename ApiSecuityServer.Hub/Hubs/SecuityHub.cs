@@ -5,6 +5,12 @@ namespace ApiSecuityServer.Hubs;
 
 public sealed class SecuityHub : Hub
 {
+    [HubMethodName("SendMessage")]
+    public async Task SendMessage(string username, string message)
+    {
+        await Clients.All.SendAsync("ReceiveMessage", username, message);
+    }
+
     [HubMethodName("AtlasSign")]
     public async Task<string> AtlasSignAsync(string url, string sign)
     {
