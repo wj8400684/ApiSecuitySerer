@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)"/>
+        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
+        <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.5.0.1" />
+        <PackageReference Include="Semi.Avalonia" Version="11.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0-rc.2.24474.3" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0-rc.2.24474.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\ApiSecuityServer.Message\ApiSecuityServer.Message.csproj" />
+    </ItemGroup>
+</Project>

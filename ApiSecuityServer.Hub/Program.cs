@@ -4,12 +4,13 @@ using ApiSecuityServer.Hubs;
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services.AddSignalR()
-    .AddJsonProtocol();
+                .AddMessagePackProtocol();
 
-builder.Services.ConfigureOptions<JsonHubProtocolOptionSetup>();
+builder.Services.AddHostedService<MessageHubSendServer>();
+builder.Services.ConfigureOptions<MessagePackHubProtocolOptionSetup>();
 
 var app = builder.Build();
 
-app.MapHub<SecuityHub>("/secuity");
+app.MapHub<ClientHub>("/order");
 
 app.Run();

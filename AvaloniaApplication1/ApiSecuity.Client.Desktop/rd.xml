@@ -7,8 +7,8 @@
         please contribute back.
     -->
     <Application>
+        <Assembly Name="Avalonia.Markup.Xaml" Dynamic="Required All"/>
+        <Assembly Name="ApiSecuity.Client" Dynamic="Required All"/>
         <Assembly Name="ApiSecuityServer.Message" Dynamic="Required All"/>
-        <!--        <Assembly Name="FluentAvaloniaUI" Dynamic="Required All"/>-->
-        <!--        <Assembly Name="Avalonia.Themes.Fluent" Dynamic="Required All"/>-->
     </Application>
 </Directives>
