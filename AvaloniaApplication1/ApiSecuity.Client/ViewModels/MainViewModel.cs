@@ -19,10 +19,8 @@ public partial class MainViewModel : ViewModelBase
     {
         _connection = new HubConnectionBuilder()
             .WithUrl("ws://127.0.0.1:6767/order")
-            .AddJsonProtocol(o =>
-            {
-                o.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-            })
+            .AddJsonProtocol()
+            .ConfigureJsonHubOptions()
             .Build();
 
         _connection.Closed += OnClosedAsync;

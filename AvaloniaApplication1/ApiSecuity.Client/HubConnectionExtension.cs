@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using ApiSecuityServer.Message;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ApiSecuity.Client;
 
@@ -29,5 +31,15 @@ public static class HubConnectionExtension
             handler: handler);
 
         return connection;
+    }
+   
+    public static  TBuilder ConfigureJsonHubOptions<TBuilder>(this TBuilder builder) where TBuilder : ISignalRBuilder
+    {
+        builder.Services.Configure<JsonHubProtocolOptions>(s =>
+        {
+            s.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+        });
+        
+        return builder;
     }
 }
