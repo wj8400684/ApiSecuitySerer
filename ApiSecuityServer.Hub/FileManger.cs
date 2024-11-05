@@ -23,23 +23,27 @@ public sealed class FileChannel(
 
     public string ConnectionId { get; private set; } = connectionId;
 
-    public Channel<byte[]>? Stream { get; private set; }
+    //public Channel<byte[]>? Stream { get; private set; }
+
+    public MemoryStream? Stream { get; set; }
 
     public void IniFile()
     {
-        Stream = Channel.CreateUnbounded<byte[]>();
+        Stream = new MemoryStream();
+        //Stream = Channel.CreateUnbounded<byte[]>();
     }
 
     /// <summary>
     /// 写入文件
     /// </summary>
     /// <param name="data"></param>
+    /// <param name="length"></param>
     /// <param name="cancellationToken"></param>
-    public async ValueTask WriterAsync(byte[] data, CancellationToken cancellationToken)
+    public async ValueTask WriterAsync(byte[] data, int length, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(Stream, "还未初始化");
-
-        await Stream.Writer.WriteAsync(data, cancellationToken);
+        await Stream.WriteAsync(data.AsMemory(0, length), cancellationToken);
+        //await Stream.Writer.WriteAsync(data, cancellationToken);
     }
 
     /// <summary>
@@ -48,8 +52,8 @@ public sealed class FileChannel(
     public void Complete()
     {
         ArgumentNullException.ThrowIfNull(Stream, "还未初始化");
-        
-        Stream.Writer.Complete();
+
+        //Stream.Writer.Complete();
     }
 
     /// <summary>
@@ -57,12 +61,13 @@ public sealed class FileChannel(
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public IAsyncEnumerable<byte[]> ReadAsync(CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(Stream, "还未初始化");
-
-        return Stream.Reader.ReadAllAsync(cancellationToken);
-    }
+    // public IAsyncEnumerable<byte[]> ReadAsync(CancellationToken cancellationToken)
+    // {
+    //     ArgumentNullException.ThrowIfNull(Stream, "还未初始化");
+    //
+    //     
+    //     return Stream.Reader.ReadAllAsync(cancellationToken);
+    // }
 
     /// <summary>
     /// 推送文件下载通知到客户端

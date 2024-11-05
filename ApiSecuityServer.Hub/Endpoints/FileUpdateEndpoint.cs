@@ -65,19 +65,20 @@ public sealed class FileUpdateEndpoint(
         try
         {
             await using var stream = req.Body.OpenReadStream();
-            while (true)
-            {
-                var buffer = new byte[1024];
-                var size = await stream.ReadAsync(buffer, ct);
-
-                if (size == 0)
-                    break;
-
-                if (size < buffer.Length)
-                    await fileChannel.WriterAsync(buffer.AsSpan()[..size].ToArray(), ct);
-                else
-                    await fileChannel.WriterAsync(buffer, ct);
-            }
+            await stream.CopyToAsync(fileChannel.Stream!, ct);
+            // while (true)
+            // {
+            //     var buffer = new byte[1024];
+            //     var size = await stream.ReadAsync(buffer, ct);
+            //
+            //     if (size == 0)
+            //         break;
+            //
+            //     if (size < buffer.Length)
+            //         await fileChannel.WriterAsync(buffer.AsSpan()[..size].ToArray(), ct);
+            //     else
+            //         await fileChannel.WriterAsync(buffer, ct);
+            // }
         }
         catch (Exception e)
         {
@@ -87,7 +88,7 @@ public sealed class FileUpdateEndpoint(
         }
 
         fileChannel.Complete();
-        
+
         return new FileUpdateResultModel(fileChannel.Id);
     }
 }

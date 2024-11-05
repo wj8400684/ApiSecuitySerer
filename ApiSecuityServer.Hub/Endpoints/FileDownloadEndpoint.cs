@@ -38,10 +38,10 @@ public sealed class FileDownloadEndpoint(
 
         try
         {
-            using var str = new MemoryStream();
-            await foreach (var m in fileChannel.ReadAsync(ct))
-                await str.WriteAsync(m, ct);
-            await SendStreamAsync(str, cancellation: ct);
+            // using var str = new MemoryStream();
+            // await foreach (var m in fileChannel.ReadAsync(ct))
+            //     await str.WriteAsync(m, ct);
+            await SendStreamAsync(fileChannel.Stream!, cancellation: ct);
         }
         catch (Exception e)
         {
