@@ -16,7 +16,7 @@ internal sealed class MessageHubSendServer(IHubContext<ClientHub, IClientApi> cl
             
             try
             {
-                await _clients.All.RefreshAllAsync(new RequestRefreshMessage(Guid.NewGuid().ToString("N")));
+                //await _clients(new RequestRefreshMessage(Guid.NewGuid().ToString("N")));
             }
             catch (Exception e)
             {

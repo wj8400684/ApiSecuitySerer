@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using ApiSecuity.Client.Helper;
 using ApiSecuityServer.Message;
@@ -13,20 +15,20 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly HubConnection _connection;
 
+    [ObservableProperty] private string? _connectedId;
     [ObservableProperty] private bool _isConnected;
 
     public MainViewModel()
     {
         _connection = new HubConnectionBuilder()
-            .WithUrl("ws://127.0.0.1:6767/order")
+            .WithUrl("ws://127.0.0.1:5224/chat")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
 
         _connection.Closed += OnClosedAsync;
-        _connection.RegisterHandler<RequestRefreshMessage>(ServerClientApiCommand.RefreshAll, OnRefreshAllAsync);
-        _connection.RegisterHandler<RequestRefreshMessage, RequestRefreshReplyMessage>(
-            ServerClientApiCommand.RequestRefresh, OnRequestRefreshAsync);
+        _connection.RegisterHandler<PublishDownloadMessage>(ServerClientApiCommand.PublishDownload,
+            OnPublishDownloadAsync);
     }
 
     #region mvvmcommand
@@ -48,10 +50,10 @@ public partial class MainViewModel : ViewModelBase
 
         await NotificationHelper.ShowInfoAsync($"连接成功");
         IsConnected = true;
+        ConnectedId = _connection.ConnectionId;
     }
 
     #endregion
-
 
     #region hubcallback
 
@@ -60,16 +62,20 @@ public partial class MainViewModel : ViewModelBase
         await NotificationHelper.ShowErrorAsync($"断开连接{arg?.Message}");
     }
 
-    private async Task<RequestRefreshReplyMessage> OnRequestRefreshAsync(RequestRefreshMessage arg)
+    private async Task OnPublishDownloadAsync(PublishDownloadMessage arg)
     {
-        await NotificationHelper.ShowInfoAsync("请求刷新返回结果");
-
-        return new RequestRefreshReplyMessage(true);
+        await NotificationHelper.ShowInfoAsync($"正在下载文件{arg.FileName}");
+        
+        Task.Factory.StartNew(async () => await DownloadFileAsync(arg));
     }
 
-    private async Task OnRefreshAllAsync(RequestRefreshMessage arg)
+    private async ValueTask DownloadFileAsync(PublishDownloadMessage arg)
     {
-        await NotificationHelper.ShowInfoAsync("请求刷新");
+        using var http = new HttpClient();
+        var response = await http.GetAsync(new Uri($"http://localhost:5224/api/file/download?fileId={arg.FileId}"));
+        await using var fs = System.IO.File.Create(arg.FileName);
+        await response.Content.CopyToAsync(fs);
+        await NotificationHelper.ShowInfoAsync("下载完成");
     }
 
     #endregion

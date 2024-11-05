@@ -18,8 +18,11 @@
                 Spacing="10"
                 Orientation="Horizontal">
         <Button Content="连接服务器"
-                IsEnabled="{Binding !IsConnected}" 
-                Command="{Binding ConnectCommand}"/>
+
+                IsEnabled="{Binding !IsConnected}"
+                Command="{Binding ConnectCommand}" />
+        <TextBox Text="{Binding ConnectedId}"
+                 Width="200" />
     </StackPanel>
 
 </UserControl>
