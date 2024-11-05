@@ -12,7 +12,7 @@ var connection = new HubConnectionBuilder()
 
 await connection.StartAsync();
 
-for (var i = 0; i < 1000; i++)
+for (var i = 0; i < 100000000; i++)
 {
     var sign = await connection.InvokeAsync<GdfpAtlasSignReplyMessage>("GdfpAtlasSign",
         new GdfpAtlasSignMessage(new byte[] { 1, 32, 32 }));
