@@ -2,7 +2,6 @@ using ApiSecuityServer.Dtos;
 using ApiSecuityServer.Hub;
 using ApiSecuityServer.Hub.Hubs;
 using ApiSecuityServer.Hubs;
-using ApiSecuityServer.Message;
 using FastEndpoints;
 using Microsoft.AspNetCore.SignalR;
 
@@ -11,7 +10,7 @@ namespace ApiSecuityServer.Endpoints;
 /// <summary>
 /// 文件上传
 /// </summary>
-public sealed class FileUpdateEndpoint(
+public sealed class FileUploadEndpoint(
     FileManger fileManger,
     ClientHubContainer container,
     IHubContext<ClientHub, IClientApi> clientContext,
