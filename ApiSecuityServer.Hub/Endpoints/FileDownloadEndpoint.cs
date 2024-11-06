@@ -29,8 +29,8 @@ public sealed class FileDownloadEndpoint(
             return;
         }
 
-        var fileChannel = fileManger.GetChannel(req.FileId);
-        if (fileChannel == null)
+        var file = fileManger.GetFile(req.FileId);
+        if (file == null)
         {
             await SendAsync(ApiResponse.Fail<FileDownloadResultModel>("文件不存在"), cancellation: ct);
             return;
@@ -38,10 +38,8 @@ public sealed class FileDownloadEndpoint(
 
         try
         {
-            // using var str = new MemoryStream();
-            // await foreach (var m in fileChannel.ReadAsync(ct))
-            //     await str.WriteAsync(m, ct);
-            await SendStreamAsync(fileChannel.Stream!, cancellation: ct);
+            file.Stream!.Position = 0;
+            await SendStreamAsync(file.Stream!, cancellation: ct);
         }
         catch (Exception e)
         {
@@ -49,7 +47,7 @@ public sealed class FileDownloadEndpoint(
         }
         finally
         {
-            fileChannel.RemoveFile();
+            file.RemoveClient();
         }
     }
 }

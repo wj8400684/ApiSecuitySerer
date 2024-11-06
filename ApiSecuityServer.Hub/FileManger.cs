@@ -80,7 +80,7 @@ public sealed class FileChannel(
     /// <summary>
     /// 将这个文件添加到当前客户端集合中
     /// </summary>
-    public bool AddFile()
+    public bool AddClient()
     {
         if (!fileManger.AddFile(this))
             return false;
@@ -92,7 +92,7 @@ public sealed class FileChannel(
     /// <summary>
     /// 从当前客户端集合中删除文件
     /// </summary>
-    public void RemoveFile()
+    public void RemoveClient()
     {
         fileManger.Delete(Id);
         clientContext.Items.Remove(Id);
@@ -128,7 +128,7 @@ public sealed class FileManger
     /// </summary>
     /// <param name="fileId"></param>
     /// <returns></returns>
-    public FileChannel? GetChannel(string fileId)
+    public FileChannel? GetFile(string fileId)
     {
         _files.TryGetValue(fileId, out var channel);
         return channel;

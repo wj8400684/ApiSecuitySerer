@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace ApiSecuity.Client.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private const string HostUrl = "127.0.0.1:6767";
     private readonly HubConnection _connection;
 
     [ObservableProperty] private string? _connectedId;
@@ -21,7 +23,7 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         _connection = new HubConnectionBuilder()
-            .WithUrl("ws://127.0.0.1:5224/chat")
+            .WithUrl($"ws://{HostUrl}/chat")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
@@ -72,8 +74,9 @@ public partial class MainViewModel : ViewModelBase
     private async ValueTask DownloadFileAsync(PublishDownloadMessage arg)
     {
         using var http = new HttpClient();
-        var response = await http.GetAsync(new Uri($"http://localhost:5224/api/file/download?fileId={arg.FileId}"));
-        await using var fs = System.IO.File.Create(arg.FileName);
+        http.BaseAddress = new Uri($"http://{HostUrl}");
+        var response = await http.GetAsync($"api/file/download?fileId={arg.FileId}");
+        await using var fs = System.IO.File.Create($"www/{arg.FileName}");
         await response.Content.CopyToAsync(fs);
         await NotificationHelper.ShowInfoAsync("下载完成");
     }

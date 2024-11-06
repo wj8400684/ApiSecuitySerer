@@ -4,12 +4,20 @@ using ApiSecuityServer.Hub.Hubs;
 using ApiSecuityServer.Hubs;
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(o =>
+// 配置 Kestrel 服务器以允许大文件上传
+builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    o.Limits.MaxRequestBodySize = 1073741824000; //set to max allowed file size of your system
+    serverOptions.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024; // 10GB
+});
+ 
+// 配置 FormOptions
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10L * 1024 * 1024 * 1024; // 10GB
 });
 
 builder.Services.AddSignalR()
@@ -26,9 +34,8 @@ builder.Services.ConfigureOptions<JsonHubProtocolOptionSetup>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-    app.UseSwaggerGen();
-
+//if (app.Environment.IsDevelopment())
+app.UseSwaggerGen();
 app.UseFastEndpoints();
 app.MapHub<ClientHub>("/chat");
 app.Run();

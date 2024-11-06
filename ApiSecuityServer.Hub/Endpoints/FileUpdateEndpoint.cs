@@ -40,11 +40,11 @@ public sealed class FileUpdateEndpoint(
             connectionId: req.ConnectionId,
             fileName: req.Body.FileName,
             fileSize: req.Body.Length,
-            clientApi: _clients.Client(req.ConnectionId),
             clientContext: hubContext,
-            fileManger: fileManger);
+            fileManger: fileManger,
+            clientApi: _clients.Client(req.ConnectionId));
 
-        var result = fileChannel.AddFile();
+        var result = fileChannel.AddClient();
 
         if (!result)
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
@@ -53,37 +53,23 @@ public sealed class FileUpdateEndpoint(
 
         try
         {
-            await fileChannel.PublishDownloadAsync();
+            await req.Body.CopyToAsync(fileChannel.Stream!, ct);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "推送到客户端失败");
-            fileChannel.RemoveFile();
+            logger.LogError(e, "上传失败请重试");
+            fileChannel.RemoveClient();
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
         }
 
         try
         {
-            await using var stream = req.Body.OpenReadStream();
-            await stream.CopyToAsync(fileChannel.Stream!, ct);
-            // while (true)
-            // {
-            //     var buffer = new byte[1024];
-            //     var size = await stream.ReadAsync(buffer, ct);
-            //
-            //     if (size == 0)
-            //         break;
-            //
-            //     if (size < buffer.Length)
-            //         await fileChannel.WriterAsync(buffer.AsSpan()[..size].ToArray(), ct);
-            //     else
-            //         await fileChannel.WriterAsync(buffer, ct);
-            // }
+            await fileChannel.PublishDownloadAsync();
         }
         catch (Exception e)
         {
-            logger.LogError(e, "上传失败请重试");
-            fileChannel.RemoveFile();
+            logger.LogError(e, "推送到客户端失败");
+            fileChannel.RemoveClient();
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
         }
 
