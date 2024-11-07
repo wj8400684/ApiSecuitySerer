@@ -17,7 +17,7 @@ namespace ApiSecuity.Client.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private const string HostUrl = "localhost:6767";
+    private const string HostUrl = "193.112.192.177:6767";
     private readonly HubConnection _connection;
 
     [ObservableProperty] private string? _targetFileId;
@@ -71,7 +71,7 @@ public partial class MainViewModel : ViewModelBase
         {
             await NotificationHelper.ShowInfoAsync($"开始下载");
             TotalFileSize = 1000000;
-            var url = $"http://localhost:6767/api/file/download/{TargetFileId}";
+            var url = $"http://{HostUrl}/api/file/download/{TargetFileId}";
             //获取到文件总大小 通过head请求
             var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
             using var client = new HttpClient(processMessageHander);
@@ -100,7 +100,7 @@ public partial class MainViewModel : ViewModelBase
 
         //var url = $"http://{HostUrl}/api/file/upload";
         var url =
-            $"http://localhost:6767/api/file/upload?ConnectionId={TargetConnectionId}&FileName=sssssss&PartNumber=1&Chunks=1&Start=1&Size=81960&End=1&Total={file.Length}";
+            $"http://{HostUrl}/api/file/upload?ConnectionId={TargetConnectionId}&FileName=sssssss&PartNumber=1&Chunks=1&Start=1&Size=81960&End=1&Total={file.Length}";
         UploadProgressSize = 0;
         file.Position = 0;
         var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
@@ -158,7 +158,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             DownloadProgressSize = 0;
-            var url = $"http://localhost:6767/api/file/download/{arg.FileId}";
+            var url = $"http://{HostUrl}7/api/file/download/{arg.FileId}";
             //获取到文件总大小 通过head请求
             var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
             using var client = new HttpClient(processMessageHander);
