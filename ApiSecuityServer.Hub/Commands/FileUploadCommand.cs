@@ -24,7 +24,7 @@ internal sealed class FileUploadCommandHandler(FileManger fileManger, ILogger<Fi
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
 
-        if (mediaType.Boundary.Value != "Multipart")
+        if (string.IsNullOrWhiteSpace(mediaType.Boundary.Value))
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
 
@@ -42,12 +42,15 @@ internal sealed class FileUploadCommandHandler(FileManger fileManger, ILogger<Fi
 
             if (section == null)
                 break;
+            
+            
+            section.Body.CopyToAsync()
         }
 
         return new FileUpdateResultModel("");
     }
 
-    private string? GetBoundary(HttpContext httpContent)
+    private static string? GetBoundary(HttpContext httpContent)
     {
         var mediaTypeHeaderContentType = MediaTypeHeaderValue.Parse(httpContent.Request.ContentType);
 

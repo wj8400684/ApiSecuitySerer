@@ -19,9 +19,23 @@ public sealed class FileTransferStream(
     public string Name { get; } = fileName;
 
     public string ConnectionId { get; set; } = id;
-    
+
     public MemoryStream? Stream { get; set; }
 
+    public Channel<byte[]>? ChannelStream { get; set; }
+
+    public void Start()
+    {
+        ChannelStream = Channel.CreateUnbounded<byte[]>();
+    }
+    
+    public async ValueTask WriterAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        Stream = new MemoryStream();
+        await file.CopyToAsync(Stream, cancellationToken);
+        Stream.Position = 0;
+    }
+    
     public async ValueTask Writer(IFormFile file, CancellationToken cancellationToken)
     {
         Stream = new MemoryStream();

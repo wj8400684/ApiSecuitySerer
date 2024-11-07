@@ -37,39 +37,39 @@ internal static class HostExtensions
 
     public static void AddSwaggerGen(this IServiceCollection services)
     {
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "OrderServer.Api", Version = "v1" });
-
-            // Add security definitions
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Description = "Please enter into field the word 'Bearer' followed by a space and the JWT value",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference()
-                        {
-                            Id = "Bearer",
-                            Type = ReferenceType.SecurityScheme
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-
-            // include document file
-            c.IncludeXmlComments(
-                Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
-                true);
-        });
+        // services.AddSwaggerGen(c =>
+        // {
+        //     c.SwaggerDoc("v1", new OpenApiInfo { Title = "OrderServer.Api", Version = "v1" });
+        //
+        //     // Add security definitions
+        //     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        //     {
+        //         Description = "Please enter into field the word 'Bearer' followed by a space and the JWT value",
+        //         Name = "Authorization",
+        //         In = ParameterLocation.Header,
+        //         Type = SecuritySchemeType.ApiKey,
+        //     });
+        //
+        //     c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        //     {
+        //         {
+        //             new OpenApiSecurityScheme
+        //             {
+        //                 Reference = new OpenApiReference()
+        //                 {
+        //                     Id = "Bearer",
+        //                     Type = ReferenceType.SecurityScheme
+        //                 }
+        //             },
+        //             Array.Empty<string>()
+        //         }
+        //     });
+        //
+        //     // include document file
+        //     c.IncludeXmlComments(
+        //         Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
+        //         true);
+        // });
     }
 
     public static void AddAndSetOptionsControllers(this IServiceCollection services)
