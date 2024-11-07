@@ -158,7 +158,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             DownloadProgressSize = 0;
-            var url = $"http://{HostUrl}7/api/file/download/{arg.FileId}";
+            var url = $"http://{HostUrl}/api/file/download/{arg.FileId}";
             //获取到文件总大小 通过head请求
             var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
             using var client = new HttpClient(processMessageHander);
