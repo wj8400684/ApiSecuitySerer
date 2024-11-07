@@ -3,11 +3,12 @@ using ApiSecuityServer.Dtos;
 using ApiSecuityServer.Hub.Attributes;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace ApiSecuityServer.Controllers;
 
 [Route("api/file")]
-public sealed class FileController(IMediator mediator) : ControllerBase
+public sealed class FileController(IMediator mediator, IOptions<JsonOptions> options) : ControllerBase
 {
     /// <summary>
     /// 上传文件
@@ -52,14 +53,13 @@ public sealed class FileController(IMediator mediator) : ControllerBase
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="fileId"></param>
     /// <param name="cancellationToken"></param>
-    [HttpPost]
-    [Route("download")]
-    public async ValueTask DownFileAsync([FromQuery] FileDownloadRequest request,
-        CancellationToken cancellationToken)
+    [HttpGet]
+    [Route("download/{fileId:guid}")]
+    public async ValueTask DownFileAsync(Guid fileId, CancellationToken cancellationToken)
     {
-        var command = new FileDownloadCommand();
-        await mediator.Publish(command, cancellationToken);
+        var command = new FileDownloadCommand(options.Value, HttpContext, fileId.ToString());
+        await mediator.Send(command, cancellationToken);
     }
 }

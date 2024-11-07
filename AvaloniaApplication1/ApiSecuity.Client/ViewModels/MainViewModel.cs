@@ -61,6 +61,42 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task OnFileDownloadedAsync()
+    {
+        TotalFileSize = 1000000;
+        var url = $"http://localhost:6767/api/file/download/08dc57cf-4ea4-4757-85f7-09ba2b463a99";
+        //获取到文件总大小 通过head请求
+        var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
+        using var client = new HttpClient();
+        processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
+        await using var fileStream =
+            new FileStream("www/ssss.s", FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+
+        //开始分片下载
+        while (DownloadProgressSize < TotalFileSize)
+        {
+            //组装range 0,1000 1000,2000 0,9999
+            var start = DownloadProgressSize;
+            var end = start + 9999;
+            if (end > (TotalFileSize - 1))
+            {
+                end = TotalFileSize - 1;
+            }
+
+            client.DefaultRequestHeaders.Range = new RangeHeaderValue(start, end);
+            var res = await client.GetAsync(url);
+
+            if (!res.IsSuccessStatusCode)
+                break;
+
+            byte[] bytes = await res.Content.ReadAsByteArrayAsync();
+            await fileStream.WriteAsync(bytes);
+            //更新UI的进度
+            DownloadProgressSize += bytes.Length;
+        }
+    }
+
+    [RelayCommand]
     private async Task OnFileUploadedAsync()
     {
         // if (!IsConnected)
@@ -70,7 +106,7 @@ public partial class MainViewModel : ViewModelBase
         // }
 
         //var url = $"http://{HostUrl}/api/file/upload";
-        var url = $"http://192.168.124.85:6767/api/file/upload?fileName=dssfdfdf";
+        var url = $"http://localhost:6767/api/file/download/08dc57cf-4ea4-4757-85f7-09ba2b463a99";
 
         var memoryStream = new MemoryStream();
         for (var i = 0; i < 1024 * 1024; i++)
@@ -80,7 +116,7 @@ public partial class MainViewModel : ViewModelBase
 
         memoryStream.Position = 0;
         var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
-        processMessageHander.HttpSendProgress += ProcessMessageHanderOnHttpSendProgress;
+        processMessageHander.HttpSendProgress += OnHttpSendProgress;
 
         using var client = new HttpClient();
         var data = new MultipartFormDataContent();
@@ -89,10 +125,25 @@ public partial class MainViewModel : ViewModelBase
         data.Add(content, "file-name", "text");
         TotalFileSize = memoryStream.Length;
 
-       var resp = await client.PostAsync(url, data);
+        var resp = await client.PostAsync(url, data);
     }
 
-    private void ProcessMessageHanderOnHttpSendProgress(object? sender, HttpProgressEventArgs e)
+    /// <summary>
+    /// 上传进度
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void OnHttpSendProgress(object? sender, HttpProgressEventArgs e)
+    {
+        DownloadProgressSize += e.ProgressPercentage;
+    }
+
+    /// <summary>
+    /// 下载回调
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void OnHttpReceiveProgress(object? sender, HttpProgressEventArgs e)
     {
         DownloadProgressSize += e.ProgressPercentage;
     }

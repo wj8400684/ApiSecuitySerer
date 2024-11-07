@@ -25,6 +25,9 @@
             <Button Content="上传文件"
                     IsEnabled="{Binding !IsConnected}"
                     Command="{Binding FileUploadedCommand}" />
+            <Button Content="下载文件"
+                    IsEnabled="{Binding !IsConnected}"
+                    Command="{Binding FileDownloadedCommand}" />
             <TextBox Text="{Binding ConnectedId}"
                      Width="200" />
         </StackPanel>

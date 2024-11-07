@@ -1,5 +1,7 @@
 using ApiSecuityServer.Dtos;
+using ApiSecuityServer.Hubs;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 
@@ -14,9 +16,14 @@ internal readonly record struct FileUploadCommand(
     int End,
     int Total) : IRequest<ApiResponse<FileUpdateResultModel>>;
 
-internal sealed class FileUploadCommandHandler(FileManger fileManger, ILogger<FileUploadCommandHandler> logger)
+internal sealed class FileUploadCommandHandler(
+    FileManger fileManger,
+    IHubContext<ClientHub, IClientApi> context,
+    ILogger<FileUploadCommandHandler> logger)
     : IRequestHandler<FileUploadCommand, ApiResponse<FileUpdateResultModel>>
 {
+    private readonly IHubClients<IClientApi> _hubClients = context.Clients;
+
     public async Task<ApiResponse<FileUpdateResultModel>> Handle(FileUploadCommand request,
         CancellationToken cancellationToken)
     {
@@ -35,6 +42,10 @@ internal sealed class FileUploadCommandHandler(FileManger fileManger, ILogger<Fi
                 "ContentType不正确");
 
         var reader = new MultipartReader(boundary, request.HttpContext.Request.Body);
+        var file = new FileTransferStream("", request.FileName, request.Total, null, fileManger, reader);
+
+        file.Start();
+        file.Add();
 
         while (true)
         {
@@ -42,12 +53,13 @@ internal sealed class FileUploadCommandHandler(FileManger fileManger, ILogger<Fi
 
             if (section == null)
                 break;
-            
-            
-            section.Body.CopyToAsync()
-        }
 
-        return new FileUpdateResultModel("");
+            await file.WriterAsync(section.Body, cancellationToken);
+        }
+        
+        file.ChannelStream1!.Writer.Complete();
+
+        return new FileUpdateResultModel(file.Id);
     }
 
     private static string? GetBoundary(HttpContext httpContent)
