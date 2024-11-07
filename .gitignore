@@ -1,0 +1,12 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs/ApiSecuitySerer
+/ApiSecuityClient/obj
+/ApiSecuityServer.Grpc
+/ApiSecuityServer.Hub/obj
+/ApiSecuityServer.Message
+/AvaloniaApplication1/ApiSecuity.Client.Desktop
+/AvaloniaApplication1/ApiSecuity.Client/bin/Debug/net9.0
+/AvaloniaApplication1/ApiSecuity.Client/obj
