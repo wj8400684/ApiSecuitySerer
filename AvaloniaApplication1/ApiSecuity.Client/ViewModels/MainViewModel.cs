@@ -101,38 +101,48 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        var folders = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+
+        try
         {
-            Title = "选择文件",
-            AllowMultiple = true,
-            FileTypeFilter = [FilePickerFileTypes.All]
-        });
+            var folders = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "选择文件",
+                AllowMultiple = true,
+                FileTypeFilter = [FilePickerFileTypes.All]
+            });
 
-        if (!folders.Any())
-            return;
+            if (!folders.Any())
+                return;
 
-        var folder = folders[0];
+            var folder = folders[0];
 
-        var stream = await folder.OpenReadAsync();
+            var stream = await folder.OpenReadAsync();
         
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www", "归档.zip");
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www", "归档.zip");
 
-        await NotificationHelper.ShowInfoAsync($"正在上传");
-        var file = stream;//File.OpenRead(path);
+            await NotificationHelper.ShowInfoAsync($"正在上传");
+            var file = stream;//File.OpenRead(path);
 
-        //var url = $"http://{HostUrl}/api/file/upload";
-        var url =
-            $"http://{HostUrl}/api/file/upload?ConnectionId={TargetConnectionId}&FileName=sssssss&PartNumber=1&Chunks=1&Start=1&Size=81960&End=1&Total={file.Length}";
-        UploadProgressSize = 0;
-        file.Position = 0;
-        var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
-        processMessageHander.HttpSendProgress += OnHttpSendProgress;
-        using var client = new HttpClient(processMessageHander);
-        var data = new MultipartFormDataContent();
-        var content = new StreamContent(file, 1024 * 1024);
-        data.Add(content, "file-name", folder.Name);
-        var resp = await client.PostAsync(url, data);
-        await NotificationHelper.ShowInfoAsync($"上传完毕");
+            //var url = $"http://{HostUrl}/api/file/upload";
+            var url =
+                $"http://{HostUrl}/api/file/upload?ConnectionId={TargetConnectionId}&FileName=sssssss&PartNumber=1&Chunks=1&Start=1&Size=81960&End=1&Total={file.Length}";
+            UploadProgressSize = 0;
+            file.Position = 0;
+        
+            var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
+            processMessageHander.HttpSendProgress += OnHttpSendProgress;
+            using var client = new HttpClient(processMessageHander);
+            var data = new MultipartFormDataContent();
+            var content = new StreamContent(file, 1024 * 1024);
+            data.Add(content, "file-name", folder.Name);
+            var resp = await client.PostAsync(url, data);
+            await NotificationHelper.ShowInfoAsync($"上传完毕");
+        }
+        catch (Exception e)
+        {
+            await NotificationHelper.ShowErrorAsync(e.Message);
+        }
+        
     }
 
     /// <summary>
