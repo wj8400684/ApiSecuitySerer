@@ -15,7 +15,6 @@ public sealed class ClientHubContainer
     public HubCallerContext? GetById(string id)
     {
         _concurrent.TryGetValue(id, out var context);
-
         return context;
     }
 

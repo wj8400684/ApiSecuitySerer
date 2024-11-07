@@ -1,6 +1,7 @@
 using ApiSecuityServer.Dtos;
 using ApiSecuityServer.Hub;
 using FastEndpoints;
+using Microsoft.Extensions.Primitives;
 
 namespace ApiSecuityServer.Endpoints;
 
@@ -30,7 +31,13 @@ public sealed class FileDownloadEndpoint(
         }
 
         var file = fileManger.GetFile(req.FileId);
-        if (file == null)
+        if (file?.Stream == null)
+        {
+            await SendAsync(ApiResponse.Fail<FileDownloadResultModel>("文件不存在"), cancellation: ct);
+            return;
+        }
+
+        if (HttpContext.Request.Headers.Range.Count == 0)
         {
             await SendAsync(ApiResponse.Fail<FileDownloadResultModel>("文件不存在"), cancellation: ct);
             return;
@@ -38,8 +45,10 @@ public sealed class FileDownloadEndpoint(
 
         try
         {
-            file.Stream!.Position = 0;
-            await SendStreamAsync(file.Stream!, cancellation: ct);
+            await SendStreamAsync(file.Stream,
+                cancellation: ct,
+                fileLengthBytes: 10000,
+                enableRangeProcessing: true);
         }
         catch (Exception e)
         {
@@ -47,7 +56,7 @@ public sealed class FileDownloadEndpoint(
         }
         finally
         {
-            file.RemoveClient();
+            file.Remove();
         }
     }
 }

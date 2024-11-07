@@ -35,45 +35,40 @@ public sealed class FileUploadEndpoint(
         if (hubContext == null)
             return ApiResponse.Fail<FileUpdateResultModel>("客户端离线");
 
-        var fileChannel = new FileChannel(
-            connectionId: req.ConnectionId,
+        var file = new FileTransferStream(
+            id: hubContext.ConnectionId,
             fileName: req.Body.FileName,
             fileSize: req.Body.Length,
-            clientContext: hubContext,
             fileManger: fileManger,
             clientApi: _clients.Client(req.ConnectionId));
 
-        var result = fileChannel.AddClient();
+        var result = file.Add();
 
         if (!result)
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
 
-        fileChannel.IniFile();
-
         try
         {
-            await req.Body.CopyToAsync(fileChannel.Stream!, ct);
+            await file.Writer(req.Body, ct);
         }
         catch (Exception e)
         {
             logger.LogError(e, "上传失败请重试");
-            fileChannel.RemoveClient();
+            file.Remove();
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
         }
 
         try
         {
-            await fileChannel.PublishDownloadAsync();
+            await file.PublishDownloadAsync();
         }
         catch (Exception e)
         {
             logger.LogError(e, "推送到客户端失败");
-            fileChannel.RemoveClient();
+            file.Remove();
             return ApiResponse.Fail<FileUpdateResultModel>("上传失败请重试");
         }
 
-        fileChannel.Complete();
-
-        return new FileUpdateResultModel(fileChannel.Id);
+        return new FileUpdateResultModel(file.Id);
     }
 }

@@ -12,17 +12,28 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Top"
+    <StackPanel VerticalAlignment="Top"
                 Margin="0,30,0,0"
                 Spacing="10"
-                Orientation="Horizontal">
-        <Button Content="连接服务器"
+                Orientation="Vertical">
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="10">
+            <Button Content="连接服务器"
+                    IsEnabled="{Binding !IsConnected}"
+                    Command="{Binding ConnectCommand}" />
+            <Button Content="上传文件"
+                    IsEnabled="{Binding !IsConnected}"
+                    Command="{Binding FileUploadedCommand}" />
+            <TextBox Text="{Binding ConnectedId}"
+                     Width="200" />
+        </StackPanel>
 
-                IsEnabled="{Binding !IsConnected}"
-                Command="{Binding ConnectCommand}" />
-        <TextBox Text="{Binding ConnectedId}"
-                 Width="200" />
+        <DockPanel Margin="10">
+            <TextBlock Text="进度" />
+            <ProgressBar Margin="10,0,0,0"
+                         Maximum="{Binding TotalFileSize}"
+                         Value="{Binding DownloadProgressSize}" />
+        </DockPanel>
     </StackPanel>
-
 </UserControl>
