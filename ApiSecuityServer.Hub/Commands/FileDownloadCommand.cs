@@ -32,8 +32,6 @@ internal sealed class FileDownloadCommandHandler(
     ILogger<FileDownloadCommandHandler> logger)
     : IRequestHandler<FileDownloadCommand>
 {
-    private static readonly ReadOnlyMemory<char> EndMark = "-".ToCharArray();
-
     public async Task Handle(FileDownloadCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.FileId))
@@ -49,82 +47,15 @@ internal sealed class FileDownloadCommandHandler(
             return;
         }
 
-        if (request.HttpContext.Request.Headers.Range.Count == 0)
-        {
-            await request.WriteErrorAsync(ApiResponse.Error("请求参数不正确"), 404, cancellationToken);
-            return;
-        }
-
-        var range = request.HttpContext.Request.Headers.Range.ToString().AsMemory();
-
-        var reader = new SequenceReader<char>(new ReadOnlySequence<char>(range));
-
-        if (!reader.TryAdvanceTo('='))
-        {
-            await request.WriteErrorAsync(ApiResponse.Error("请求参数不正确"), 404, cancellationToken);
-            return;
-        }
-
-        if (!reader.TryReadTo(out ReadOnlySequence<char> startSequence, EndMark.Span, advancePastDelimiter: true))
-        {
-            await request.WriteErrorAsync(ApiResponse.Error("请求参数不正确"), 404, cancellationToken);
-            return;
-        }
-
-        if (!int.TryParse(startSequence.ToString(), out var start) ||
-            !int.TryParse(reader.UnreadSequence.ToString(), out var end))
-        {
-            await request.WriteErrorAsync(ApiResponse.Error("请求参数不正确"), 404, cancellationToken);
-            return;
-        }
-
-        var re = file.ChannelStream1!.Reader;
+        var reader = file.ChannelStream.Reader;
 
         try
         {
-            while (await re.WaitToReadAsync(cancellationToken))
+            while (await reader.WaitToReadAsync(cancellationToken))
             {
-                if (!re.TryRead(out var stream))
-                    continue;
-
-                var totalWriterLength = 0;
-                var readerLength = end - start;
-                var buffer = ArrayPool<byte>.Shared.Rent(readerLength);
-
-                while (true)
-                {
-                    var remainingLength = (int)(stream.Length - stream.Position); //剩余长度
-
-                    if (remainingLength == 0)
-                    {
-                        await Task.Delay(1000, cancellationToken);
-                        continue;
-                    }
-
-                    readerLength = end - start; //需要的长度
-
-                    if (totalWriterLength == readerLength) //完成
-                        break;
-
-                    var size = await stream.ReadAsync(buffer, cancellationToken);
-
-                    if (size < buffer.Length)
-                    {
-                        await request.HttpContext.Response.BodyWriter.WriteAsync(buffer.AsMemory(0, size),
-                            cancellationToken);
-                    }
-                    else
-                    {
-                        await request.HttpContext.Response.BodyWriter.WriteAsync(buffer, cancellationToken);
-                    }
-
-                    totalWriterLength += size;
-                }
-
-                ArrayPool<byte>.Shared.Return(buffer);
+                if (reader.TryRead(out var buffer))
+                    await request.HttpContext.Response.BodyWriter.WriteAsync(buffer, cancellationToken);
             }
-            
-            await request.HttpContext.Response.BodyWriter.CompleteAsync();
         }
         catch (Exception e)
         {
@@ -133,6 +64,7 @@ internal sealed class FileDownloadCommandHandler(
         finally
         {
             file.Remove();
+            await request.HttpContext.Response.BodyWriter.CompleteAsync();
         }
     }
 }

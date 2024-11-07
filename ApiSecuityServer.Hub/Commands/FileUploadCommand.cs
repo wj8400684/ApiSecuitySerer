@@ -47,18 +47,24 @@ internal sealed class FileUploadCommandHandler(
         file.Start();
         file.Add();
 
-        while (true)
+        try
         {
-            var section = await reader.ReadNextSectionAsync(cancellationToken);
+            while (true)
+            {
+                var section = await reader.ReadNextSectionAsync(cancellationToken);
 
-            if (section == null)
-                break;
+                if (section == null)
+                    break;
 
-            await file.WriterAsync(section.Body, cancellationToken);
+                await file.WriterAsync(section.Body, cancellationToken);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
         
-        file.ChannelStream1!.Writer.Complete();
-
         return new FileUpdateResultModel(file.Id);
     }
 

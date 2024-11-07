@@ -26,45 +26,16 @@ public sealed class FileTransferStream(
 
     public Channel<byte[]>? ChannelStream { get; set; }
 
-    public Channel<MemoryStream>? ChannelStream1 { get; set; }
-
     public void Start()
     {
-        ChannelStream1 = Channel.CreateUnbounded<MemoryStream>();
         ChannelStream = Channel.CreateUnbounded<byte[]>();
     }
 
     public async ValueTask WriterAsync(Stream stream, CancellationToken cancellationToken)
     {
-        var fileStream = new MemoryStream();
-        await stream.CopyToAsync(stream, cancellationToken);
-        fileStream.Position = 0;
-        await ChannelStream1!.Writer.WriteAsync(fileStream, cancellationToken);
-
-        return;
-
-        ArgumentNullException.ThrowIfNull(ChannelStream);
-
-        while (true)
-        {
-            var buffer = new byte[8196];
-            var size = await stream.ReadAsync(buffer, cancellationToken);
-
-            if (size == 0)
-                break;
-
-            if (size < buffer.Length)
-                await ChannelStream.Writer.WriteAsync(buffer.AsSpan()[..size].ToArray(), cancellationToken);
-            else
-                await ChannelStream.Writer.WriteAsync(buffer, cancellationToken);
-        }
-    }
-
-    public async ValueTask Writer(IFormFile file, CancellationToken cancellationToken)
-    {
-        Stream = new MemoryStream();
-        await file.CopyToAsync(Stream, cancellationToken);
-        Stream.Position = 0;
+        var buffer = new byte[stream.Length];
+        _ = await stream.ReadAsync(buffer, cancellationToken);
+        await ChannelStream!.Writer.WriteAsync(buffer, cancellationToken);
     }
 
     /// <summary>

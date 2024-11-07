@@ -71,29 +71,7 @@ public partial class MainViewModel : ViewModelBase
         processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
         await using var fileStream =
             new FileStream("www/ssss.s", FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-
-        //开始分片下载
-        while (DownloadProgressSize < TotalFileSize)
-        {
-            //组装range 0,1000 1000,2000 0,9999
-            var start = DownloadProgressSize;
-            var end = start + 9999;
-            if (end > (TotalFileSize - 1))
-            {
-                end = TotalFileSize - 1;
-            }
-
-            client.DefaultRequestHeaders.Range = new RangeHeaderValue(start, end);
-            var res = await client.GetAsync(url);
-
-            if (!res.IsSuccessStatusCode)
-                break;
-
-            byte[] bytes = await res.Content.ReadAsByteArrayAsync();
-            await fileStream.WriteAsync(bytes);
-            //更新UI的进度
-            DownloadProgressSize += bytes.Length;
-        }
+        var res = await client.GetAsync(url);
     }
 
     [RelayCommand]
