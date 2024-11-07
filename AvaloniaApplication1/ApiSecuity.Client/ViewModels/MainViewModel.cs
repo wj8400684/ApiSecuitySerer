@@ -20,10 +20,14 @@ public partial class MainViewModel : ViewModelBase
     private const string HostUrl = "localhost:6767";
     private readonly HubConnection _connection;
 
+    [ObservableProperty] private string? _targetFileId;
+    [ObservableProperty] private string? _targetConnectionId;
     [ObservableProperty] private long _totalFileSize;
     [ObservableProperty] private long _downloadProgressSize;
+    [ObservableProperty] private long _uploadProgressSize;
     [ObservableProperty] private string? _connectedId;
     [ObservableProperty] private bool _isConnected;
+    [ObservableProperty] private string? _downloadProgress;
 
     public MainViewModel()
     {
@@ -63,47 +67,50 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnFileDownloadedAsync()
     {
-        TotalFileSize = 1000000;
-        var url = $"http://localhost:6767/api/file/download/08dc57cf-4ea4-4757-85f7-09ba2b463a99";
-        //获取到文件总大小 通过head请求
-        var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
-        using var client = new HttpClient();
-        processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
-        await using var fileStream =
-            new FileStream("www/ssss.s", FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-        var res = await client.GetAsync(url);
+        await Task.Factory.StartNew(async () =>
+        {
+            await NotificationHelper.ShowInfoAsync($"开始下载");
+            TotalFileSize = 1000000;
+            var url = $"http://localhost:6767/api/file/download/{TargetFileId}";
+            //获取到文件总大小 通过head请求
+            var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
+            using var client = new HttpClient(processMessageHander);
+            processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
+            await using var fileStream =
+                new FileStream("www/ssss.s", FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+            var res = await client.GetAsync(url);
+            await res.Content.CopyToAsync(fileStream);
+            await NotificationHelper.ShowInfoAsync($"下载成功");
+        });
     }
 
     [RelayCommand]
     private async Task OnFileUploadedAsync()
     {
-        // if (!IsConnected)
-        // {
-        //     await NotificationHelper.ShowErrorAsync("清先连接服务器");
-        //     return;
-        // }
-
-        //var url = $"http://{HostUrl}/api/file/upload";
-        var url = $"http://localhost:6767/api/file/download/08dc57cf-4ea4-4757-85f7-09ba2b463a99";
-
-        var memoryStream = new MemoryStream();
-        for (var i = 0; i < 1024 * 1024; i++)
+        if (!IsConnected)
         {
-            memoryStream.WriteByte((byte)Random.Shared.Next(0, 255));
+            await NotificationHelper.ShowErrorAsync("清先连接服务器");
+            return;
         }
 
-        memoryStream.Position = 0;
+        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www", "归档.zip");
+
+        await NotificationHelper.ShowInfoAsync($"正在上传");
+        var file = File.OpenRead(path);
+
+        //var url = $"http://{HostUrl}/api/file/upload";
+        var url =
+            $"http://localhost:6767/api/file/upload?ConnectionId={TargetConnectionId}&FileName=sssssss&PartNumber=1&Chunks=1&Start=1&Size=81960&End=1&Total={file.Length}";
+        UploadProgressSize = 0;
+        file.Position = 0;
         var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
         processMessageHander.HttpSendProgress += OnHttpSendProgress;
-
-        using var client = new HttpClient();
+        using var client = new HttpClient(processMessageHander);
         var data = new MultipartFormDataContent();
-        var content = new StreamContent(memoryStream);
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        data.Add(content, "file-name", "text");
-        TotalFileSize = memoryStream.Length;
-
+        var content = new StreamContent(file, 1024 * 1024);
+        data.Add(content, "file-name", file.Name);
         var resp = await client.PostAsync(url, data);
+        await NotificationHelper.ShowInfoAsync($"上传完毕");
     }
 
     /// <summary>
@@ -113,7 +120,8 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="e"></param>
     private void OnHttpSendProgress(object? sender, HttpProgressEventArgs e)
     {
-        DownloadProgressSize += e.ProgressPercentage;
+        DownloadProgress = $"{e.ProgressPercentage}%";
+        UploadProgressSize = e.ProgressPercentage;
     }
 
     /// <summary>
@@ -123,7 +131,6 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="e"></param>
     private void OnHttpReceiveProgress(object? sender, HttpProgressEventArgs e)
     {
-        DownloadProgressSize += e.ProgressPercentage;
     }
 
     #endregion
@@ -137,43 +144,48 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task OnPublishDownloadAsync(PublishDownloadMessage arg)
     {
-        await NotificationHelper.ShowInfoAsync($"正在下载文件{arg.FileName}");
+        DownloadProgressSize = 0;
+
+        await NotificationHelper.ShowInfoAsync($"推送下载 {arg.FileName} 文件大小 {arg.FileSize}");
 
         Task.Factory.StartNew(async () => await DownloadFileAsync(arg));
     }
 
     private async ValueTask DownloadFileAsync(PublishDownloadMessage arg)
     {
-        TotalFileSize = arg.FileSize;
-        await NotificationHelper.ShowInfoAsync("下载完成");
+        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www", Path.GetRandomFileName() + arg.FileName);
 
-        var url = $"http://{HostUrl}/api/file/down/{arg.FileId}";
-        //获取到文件总大小 通过head请求
-        using var client = new HttpClient();
-        await using var fileStream =
-            new FileStream($"www/{arg.FileName}", FileMode.Create, FileAccess.Write, FileShare.Read);
-
-        //开始分片下载
-        while (DownloadProgressSize < TotalFileSize)
+        try
         {
-            //组装range 0,1000 1000,2000 0,9999
-            long start = DownloadProgressSize;
-            long end = start + 9999;
-            if (end > (TotalFileSize - 1))
+            DownloadProgressSize = 0;
+            var url = $"http://localhost:6767/api/file/download/{arg.FileId}";
+            //获取到文件总大小 通过head请求
+            var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
+            using var client = new HttpClient(processMessageHander);
+            processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
+
+            await using var fileStream =
+                new FileStream(path, FileMode.OpenOrCreate,
+                    FileAccess.Write);
+            var res = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+
+            await using var file = await res.Content.ReadAsStreamAsync();
+            var buffer = new byte[81920];
+            long totalBytesRead = 0;
+            int bytesRead;
+            while ((bytesRead = await file.ReadAsync(buffer)) != 0)
             {
-                end = TotalFileSize - 1;
+                await Task.Delay(1);
+                //await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                totalBytesRead += bytesRead;
+                DownloadProgressSize = (totalBytesRead / arg.FileSize) * 100;
             }
 
-            client.DefaultRequestHeaders.Range = new System.Net.Http.Headers.RangeHeaderValue(start, end);
-            var res = await client.GetAsync(url);
-
-            if (!res.IsSuccessStatusCode)
-                break;
-
-            byte[] bytes = await res.Content.ReadAsByteArrayAsync();
-            await fileStream.WriteAsync(bytes);
-            //更新UI的进度
-            DownloadProgressSize += bytes.Length;
+            await NotificationHelper.ShowInfoAsync($"下载完毕 {arg.FileName} 文件大小 {arg.FileSize}");
+        }
+        catch (Exception e)
+        {
+            await NotificationHelper.ShowErrorAsync($"下载错误 {arg.FileName} 文件大小 {arg.FileSize}-{e.Message}");
         }
     }
 

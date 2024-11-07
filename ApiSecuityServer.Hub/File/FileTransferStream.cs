@@ -10,32 +10,54 @@ public sealed class FileTransferStream(
     string id,
     string fileName,
     long fileSize,
+    int bufferSize,
     IClientApi clientApi,
     FileManger fileManger,
     MultipartReader multipartReader)
 {
     public long Size { get; } = fileSize;
 
-    public string Id { get; } = "08dc57cf-4ea4-4757-85f7-09ba2b463a99"; //Guid.NewGuid().ToString();
+    public string Id { get; } = Guid.NewGuid().ToString();
 
     public string Name { get; } = fileName;
 
     public string ConnectionId { get; set; } = id;
 
-    public MemoryStream? Stream { get; set; }
+    public Channel<byte[]> ChannelStream { get; private set; } = Channel.CreateUnbounded<byte[]>();
 
-    public Channel<byte[]>? ChannelStream { get; set; }
-
-    public void Start()
+    public async ValueTask ReadFileAsync(CancellationToken cancellationToken)
     {
-        ChannelStream = Channel.CreateUnbounded<byte[]>();
+        var writer = ChannelStream.Writer;
+
+        while (true)
+        {
+            var section = await multipartReader.ReadNextSectionAsync(cancellationToken);
+
+            if (section == null)
+                break;
+
+            while (true)
+            {
+                var buffer = new byte[bufferSize];
+                var readSize = await section.Body.ReadAsync(buffer, cancellationToken);
+
+                if (readSize == 0)
+                    break;
+
+                if (readSize == bufferSize)
+                    await writer.WriteAsync(buffer, cancellationToken);
+                else
+                    await writer.WriteAsync(buffer.AsSpan(0, readSize).ToArray(), cancellationToken);
+            }
+        }
     }
 
-    public async ValueTask WriterAsync(Stream stream, CancellationToken cancellationToken)
+    /// <summary>
+    /// 读取完成
+    /// </summary>
+    public void ReadComplete()
     {
-        var buffer = new byte[stream.Length];
-        _ = await stream.ReadAsync(buffer, cancellationToken);
-        await ChannelStream!.Writer.WriteAsync(buffer, cancellationToken);
+        ChannelStream.Writer.Complete();
     }
 
     /// <summary>

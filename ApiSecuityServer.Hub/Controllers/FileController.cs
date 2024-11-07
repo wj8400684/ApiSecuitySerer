@@ -24,10 +24,12 @@ public sealed class FileController(IMediator mediator, IOptions<JsonOptions> opt
         CancellationToken cancellationToken)
     {
         var command = new FileUploadCommand(
+            ConnectionId: request.ConnectionId,
             HttpContext: HttpContext,
             FileName: request.FileName,
             PartNumber: request.PartNumber,
             Chunks: request.Chunks,
+            Size: request.Size,
             Start: request.Start,
             End: request.End,
             Total: request.Total);

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:u="https://irihi.tech/ursa"
              xmlns:vm="clr-namespace:ApiSecuity.Client.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ApiSecuity.Client.Views.MainView"
@@ -16,27 +17,75 @@
                 Margin="0,30,0,0"
                 Spacing="10"
                 Orientation="Vertical">
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Spacing="10">
-            <Button Content="连接服务器"
-                    IsEnabled="{Binding !IsConnected}"
-                    Command="{Binding ConnectCommand}" />
-            <Button Content="上传文件"
-                    IsEnabled="{Binding !IsConnected}"
-                    Command="{Binding FileUploadedCommand}" />
-            <Button Content="下载文件"
-                    IsEnabled="{Binding !IsConnected}"
-                    Command="{Binding FileDownloadedCommand}" />
-            <TextBox Text="{Binding ConnectedId}"
+
+        <Button Content="连接服务器"
+                IsEnabled="{Binding !IsConnected}"
+                Command="{Binding ConnectCommand}" />
+
+        <Grid ColumnDefinitions="Auto,*"
+              RowDefinitions="40,40,40"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+            <TextBlock Text="当前连接id："
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="0"
+                       Grid.Row="1"
+                       Text="远程连接id："
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="0"
+                       Grid.Row="2"
+                       Text="远程文件id："
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1"
+                     Grid.Row="0"
+                     HorizontalAlignment="Left"
+                     Text="{Binding ConnectedId}"
                      Width="200" />
-        </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                        Grid.Row="1"
+                        Spacing="10"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+                <TextBox Text="{Binding TargetConnectionId, UpdateSourceTrigger=PropertyChanged}"
+                         Width="200" />
+                <Button Content="发送文件"
+                        IsEnabled="{Binding IsConnected}"
+                        Command="{Binding FileUploadedCommand}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                        Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Spacing="10">
+                <TextBox Text="{Binding TargetFileId}"
+                         Width="200" />
+                <Button Content="下载文件"
+                        IsEnabled="{Binding IsConnected}"
+                        Command="{Binding FileDownloadedCommand}" />
+            </StackPanel>
+        </Grid>
+
 
         <DockPanel Margin="10">
-            <TextBlock Text="进度" />
+            <TextBlock Text="下载进度" />
             <ProgressBar Margin="10,0,0,0"
-                         Maximum="{Binding TotalFileSize}"
+                         Maximum="100"
+                         Minimum="0"
                          Value="{Binding DownloadProgressSize}" />
+        </DockPanel>
+
+        <DockPanel Margin="10">
+            <TextBlock Text="上传进度" />
+            <ProgressBar Margin="10,0,0,0"
+                         Maximum="100"
+                         Minimum="0"
+                         Value="{Binding UploadProgressSize}" />
         </DockPanel>
     </StackPanel>
 </UserControl>

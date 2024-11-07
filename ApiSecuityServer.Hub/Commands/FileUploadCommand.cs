@@ -9,9 +9,11 @@ namespace ApiSecuityServer.Commands;
 
 internal readonly record struct FileUploadCommand(
     HttpContext HttpContext,
+    string ConnectionId,
     string FileName,
     int PartNumber,
     int Chunks,
+    int Size,
     int Start,
     int End,
     int Total) : IRequest<ApiResponse<FileUpdateResultModel>>;
@@ -42,29 +44,35 @@ internal sealed class FileUploadCommandHandler(
                 "ContentType不正确");
 
         var reader = new MultipartReader(boundary, request.HttpContext.Request.Body);
-        var file = new FileTransferStream("", request.FileName, request.Total, null, fileManger, reader);
+        var file = new FileTransferStream("", request.FileName, request.Total, request.Size,
+            _hubClients.Clients(request.ConnectionId), fileManger, reader);
 
-        file.Start();
         file.Add();
 
         try
         {
-            while (true)
-            {
-                var section = await reader.ReadNextSectionAsync(cancellationToken);
-
-                if (section == null)
-                    break;
-
-                await file.WriterAsync(section.Body, cancellationToken);
-            }
+            await file.PublishDownloadAsync();
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            file.Remove();
+            return ApiResponse.Fail<FileUpdateResultModel>(e.Message);
         }
-        
+
+        try
+        {
+            await file.ReadFileAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            file.Remove();
+            return ApiResponse.Fail<FileUpdateResultModel>(e.Message);
+        }
+        finally
+        {
+            file.ReadComplete();
+        }
+
         return new FileUpdateResultModel(file.Id);
     }
 
