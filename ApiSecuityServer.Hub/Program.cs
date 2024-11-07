@@ -3,6 +3,7 @@ using ApiSecuityServer.Hub.Hubs;
 using ApiSecuityServer.Hubs;
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ var app = builder.Build();
 
 if (builder.Configuration.GetValue<bool>("enableSwaggerApi"))
 {
-    app.UseSwaggerGen();
+    app.MapScalarApiReference();
 }
 
 app.UseFastEndpoints();
