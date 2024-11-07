@@ -50,6 +50,6 @@ public sealed class FileTransferStream(
     /// </summary>
     public void Remove()
     {
-        fileManger.Delete(Id);
+        fileManger.DeleteAsync(Id);
     }
 }

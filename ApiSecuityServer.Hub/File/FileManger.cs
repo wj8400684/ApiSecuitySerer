@@ -58,8 +58,10 @@ public sealed class FileManger
     /// 删除文件
     /// </summary>
     /// <param name="fileId"></param>
-    public void Delete(string fileId)
+    public ValueTask DeleteAsync(string fileId)
     {
         _files.TryRemove(fileId, out var _);
+
+        return ValueTask.CompletedTask;
     }
 }
