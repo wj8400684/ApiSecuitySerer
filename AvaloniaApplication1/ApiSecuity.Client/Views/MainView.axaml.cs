@@ -9,12 +9,14 @@ namespace ApiSecuity.Client.Views;
 
 public partial class MainView : UserControl
 {
+    private readonly MainViewModel _mainViewModel;
+
     public MainView()
     {
         InitializeComponent();
-        DataContext = new MainViewModel();
+        DataContext = _mainViewModel = new MainViewModel();
     }
-    
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
@@ -23,6 +25,8 @@ public partial class MainView : UserControl
 
         ArgumentNullException.ThrowIfNull(topLevel);
 
+        _mainViewModel.SetStorageProvider(topLevel.StorageProvider);
+        
         NotificationHelper.Notification = new WindowNotificationManager(topLevel)
             { MaxItems = 10, Position = NotificationPosition.TopRight };
     }

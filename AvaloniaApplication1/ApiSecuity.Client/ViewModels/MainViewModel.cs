@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Handlers;
@@ -8,6 +9,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using ApiSecuity.Client.Helper;
 using ApiSecuityServer.Message;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -17,14 +19,15 @@ namespace ApiSecuity.Client.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private IStorageProvider _storageProvider = null!;
     private const string HostUrl = "193.112.192.177:6767";
     private readonly HubConnection _connection;
 
     [ObservableProperty] private string? _targetFileId;
     [ObservableProperty] private string? _targetConnectionId;
     [ObservableProperty] private long _totalFileSize;
-    [ObservableProperty] private long _downloadProgressSize;
-    [ObservableProperty] private long _uploadProgressSize;
+    [ObservableProperty] private double _downloadProgressSize;
+    [ObservableProperty] private double _uploadProgressSize;
     [ObservableProperty] private string? _connectedId;
     [ObservableProperty] private bool _isConnected;
     [ObservableProperty] private string? _downloadProgress;
@@ -42,6 +45,11 @@ public partial class MainViewModel : ViewModelBase
             OnPublishDownloadAsync);
     }
 
+    public void SetStorageProvider(IStorageProvider storageProvider)
+    {
+        _storageProvider = storageProvider;
+    }
+    
     #region mvvmcommand
 
     [RelayCommand]
@@ -93,10 +101,24 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
+        var folders = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "选择文件",
+            AllowMultiple = true,
+            FileTypeFilter = [FilePickerFileTypes.All]
+        });
+
+        if (!folders.Any())
+            return;
+
+        var folder = folders[0];
+
+        var stream = await folder.OpenReadAsync();
+        
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www", "归档.zip");
 
         await NotificationHelper.ShowInfoAsync($"正在上传");
-        var file = File.OpenRead(path);
+        var file = stream;//File.OpenRead(path);
 
         //var url = $"http://{HostUrl}/api/file/upload";
         var url =
@@ -108,7 +130,7 @@ public partial class MainViewModel : ViewModelBase
         using var client = new HttpClient(processMessageHander);
         var data = new MultipartFormDataContent();
         var content = new StreamContent(file, 1024 * 1024);
-        data.Add(content, "file-name", file.Name);
+        data.Add(content, "file-name", folder.Name);
         var resp = await client.PostAsync(url, data);
         await NotificationHelper.ShowInfoAsync($"上传完毕");
     }
@@ -171,7 +193,7 @@ public partial class MainViewModel : ViewModelBase
 
             await using var file = await res.Content.ReadAsStreamAsync();
             var buffer = new byte[81920];
-            long totalBytesRead = 0;
+            double totalBytesRead = 0;
             int bytesRead;
             while ((bytesRead = await file.ReadAsync(buffer)) != 0)
             {
