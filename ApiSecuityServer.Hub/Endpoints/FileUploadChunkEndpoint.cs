@@ -6,7 +6,7 @@ using Microsoft.Net.Http.Headers;
 namespace ApiSecuityServer.Endpoints;
 
 public sealed class FileUploadChunkEndpoint(ILogger<FileUploadChunkEndpoint> logger)
-    : Endpoint<FileChunkRequest>
+    : Endpoint<FileUploadChunkRequest>
 {
     public override void Configure()
     {
@@ -15,7 +15,7 @@ public sealed class FileUploadChunkEndpoint(ILogger<FileUploadChunkEndpoint> log
         Post("api/file/upload/chunk");
     }
 
-    public override async Task HandleAsync(FileChunkRequest req, CancellationToken ct)
+    public override async Task HandleAsync(FileUploadChunkRequest req, CancellationToken ct)
     {
         var contextType = MediaTypeHeaderValue.Parse(HttpContext.Request.ContentType);
 
