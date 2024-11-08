@@ -1,3 +1,4 @@
+using EntityFrameworkCore.UnitOfWork.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,8 @@ public static class DBDataExtension
         services.AddDbContextPool<ApplicationDbContext>(optionsAction: options =>
         {
             options.UseSqlite(connectionString);
-        });
+        }).AddScoped<DbContext, ApplicationDbContext>()
+        .AddUnitOfWork()
+        .AddUnitOfWork<ApplicationDbContext>();
     }
 }
