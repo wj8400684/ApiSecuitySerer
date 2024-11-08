@@ -13,9 +13,9 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <StackPanel VerticalAlignment="Top"
-                Margin="10,30,10,0"
+    <StackPanel Margin="20,30,20,0"
                 Spacing="10"
+				VerticalAlignment="Center"
                 Orientation="Vertical">
 
         <StackPanel Orientation="Horizontal"
@@ -31,7 +31,6 @@
                     IsEnabled="{Binding !IsConnected}"
                     Command="{Binding ConnectCommand}" />
         </StackPanel>
-
 
         <Border Classes="Shadow"
                 Padding="15"

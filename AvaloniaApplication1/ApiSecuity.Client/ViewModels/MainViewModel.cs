@@ -53,7 +53,7 @@ public partial class MainViewModel : ViewModelBase
     {
         _connection = new HubConnectionBuilder()
             .WithUrl(
-                $"ws://{HostUrl}/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
+                $"ws://{HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
@@ -61,12 +61,12 @@ public partial class MainViewModel : ViewModelBase
         _connection.Closed += OnClosedHandlerAsync;
         _connection.RegisterHandler<ConnectionInfoMessage>(ServerClientApiCommand.SyncConnectionInfo,
             OnSyncConnectionInfoHandlerMessage);
-        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.PushConnectionEvent,
+        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.ConnectionEvent,
             OnConnectionEventHandlerAsync);
-        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.PushDisConnectionEvent,
+        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.DisConnectionEvent,
             OnDisconnectionEventHandlerAsync);
-        _connection.RegisterHandler<DownloadFileMessage>(ServerClientApiCommand.PushDownloadDataEvent,
-            OnDownloadDataHandlerAsync);
+        _connection.RegisterHandler<DownloadFileMessage>(ServerClientApiCommand.DownloadFileEvent,
+            OnDownloadFileHandlerAsync);
     }
 
     public void SetStorageProvider(IStorageProvider storageProvider)
@@ -321,7 +321,7 @@ public partial class MainViewModel : ViewModelBase
     /// 下载通知
     /// </summary>
     /// <param name="arg"></param>
-    private async Task OnDownloadDataHandlerAsync(DownloadFileMessage arg)
+    private async Task OnDownloadFileHandlerAsync(DownloadFileMessage arg)
     {
         await NotificationHelper.ShowInfoAsync($"推送下载 {arg.FileName} 文件大小 {arg.FileSize}");
 
@@ -413,13 +413,13 @@ public partial class MainViewModel : ViewModelBase
                 await using var fileStream =
                     new FileStream(path, FileMode.OpenOrCreate,
                         FileAccess.Write);
-                var res = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                using var httpResponse = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                await using var responseStream = await httpResponse.Content.ReadAsStreamAsync();
 
-                await using var file = await res.Content.ReadAsStreamAsync();
-                var buffer = new byte[81920];
-                double totalBytesRead = 0;
                 int bytesRead;
-                while ((bytesRead = await file.ReadAsync(buffer)) != 0)
+                double totalBytesRead = 0;
+                var buffer = new byte[81920];
+                while ((bytesRead = await responseStream.ReadAsync(buffer)) != 0)
                 {
                     await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
                     totalBytesRead += bytesRead;

@@ -16,7 +16,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.ConfigureAllOptions();
 builder.Services.AddAndSetOptionsControllers();
 builder.Services.AddSingleton<FileManger>();
-builder.Services.AddHostedService<MessageHubSendServer>();
 
 var app = builder.Build();
 
@@ -27,5 +26,5 @@ if (builder.Configuration.GetValue<bool>("enableSwaggerApi"))
 }
 
 app.MapControllers();
-app.MapHub<ClientHub>("/chat");
+app.MapHub<ClientHub>("/api/chat");
 app.Run();

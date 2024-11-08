@@ -46,8 +46,6 @@ public sealed class FileTransferStream(
                     await writer.WriteAsync(buffer, cancellationToken);
                 else
                     await writer.WriteAsync(buffer[..readSize], cancellationToken);
-                
-                buffer = new byte[bufferSize].AsMemory();
             }
         }
     }
