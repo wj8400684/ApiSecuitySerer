@@ -151,85 +151,85 @@ public partial class MainViewModel : ViewModelBase
             if (!folders.Any())
                 return;
 
-            var folder = folders[0];
-
-            var stream = await folder.OpenReadAsync();
-            stream.Position = 0;
-
-            await NotificationHelper.ShowInfoAsync($"正在上传");
-
-            long bufferLength = 1024 * 1024 * 1000; //100m
-
-            if (stream.Length < bufferLength) //大于500m才需要分组上传
-                bufferLength = stream.Length;
-
-            var chunks = stream.Length / bufferLength;
-
-            if (chunks == 0)
-                chunks = 1;
-
-            //var url = $"http://{HostUrl}/api/file/upload";
-            var url1 =
-                $"http://{HostUrl}/api/file/upload?ConnectionId={SelectedConnection.Id}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
-
-            var partNumber = 0;
-            var start = 0;
-            var end = 0;
-
-            var sizeDescription = string.Empty;
-
-            if (stream.Length < 1024)
-                sizeDescription = $"{stream.Length} bit";
-            else if (stream.Length > 1024 && stream.Length < 1048576) //小鱼1m
-                sizeDescription = $"{stream.Length / (double)1024} kb";
-            else if (stream.Length > 1048576 && stream.Length < 1073741824) //小于1g
-                sizeDescription = $"{stream.Length / (double)1048576} mb";
-            else
-                sizeDescription = $"{stream.Length / (double)1073741824} gb";
-
-            UploadDescription = $"({folder.Name}-{sizeDescription})";
-
-            while (true)
+            foreach (var folder in folders)
             {
-                UploadProgressSize = 0;
+                var stream = await folder.OpenReadAsync();
+                stream.Position = 0;
+                await NotificationHelper.ShowInfoAsync($"正在上传");
 
-                var buffer = new byte[bufferLength]; //每次上传10m
-                //var size = await stream.ReadAsync(buffer);
+                long bufferLength = 1024 * 1024 * 1000; //100m
 
-                var size = 100;
-                if (partNumber == 0)
-                    start = 0;
+                if (stream.Length < bufferLength) //大于500m才需要分组上传
+                    bufferLength = stream.Length;
+
+                var chunks = stream.Length / bufferLength;
+
+                if (chunks == 0)
+                    chunks = 1;
+
+                //var url = $"http://{HostUrl}/api/file/upload";
+                var url1 =
+                    $"http://{HostUrl}/api/file/upload?ConnectionId={SelectedConnection.Id}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
+
+                var partNumber = 0;
+                var start = 0;
+                var end = 0;
+
+                var sizeDescription = string.Empty;
+
+                if (stream.Length < 1024)
+                    sizeDescription = $"{stream.Length} bit";
+                else if (stream.Length > 1024 && stream.Length < 1048576) //小鱼1m
+                    sizeDescription = $"{stream.Length / (double)1024} kb";
+                else if (stream.Length > 1048576 && stream.Length < 1073741824) //小于1g
+                    sizeDescription = $"{stream.Length / (double)1048576} mb";
                 else
-                    start += size;
+                    sizeDescription = $"{stream.Length / (double)1073741824} gb";
 
-                end = start + size;
+                UploadDescription = $"({folder.Name}-{sizeDescription})";
 
-                var url = string.Format(url1, partNumber.ToString(), start, end);
-
-                if (size == 0)
-                    break;
-
-                var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
-                processMessageHander.HttpSendProgress += OnHttpSendProgress;
-                using var client = new HttpClient(processMessageHander);
-                var data = new MultipartFormDataContent();
-
-                var content = new StreamContent(stream, 4096);
-                data.Add(content, "file-name", folder.Name);
-                var resp = await client.PostAsync(url, data);
-                if (resp.StatusCode != HttpStatusCode.OK)
+                while (true)
                 {
-                    Console.WriteLine(resp.Content.ReadAsStringAsync().Result);
+                    UploadProgressSize = 0;
+
+                    var buffer = new byte[bufferLength]; //每次上传10m
+                    //var size = await stream.ReadAsync(buffer);
+
+                    var size = 100;
+                    if (partNumber == 0)
+                        start = 0;
+                    else
+                        start += size;
+
+                    end = start + size;
+
+                    var url = string.Format(url1, partNumber.ToString(), start, end);
+
+                    if (size == 0)
+                        break;
+
+                    var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
+                    processMessageHander.HttpSendProgress += OnHttpSendProgress;
+                    using var client = new HttpClient(processMessageHander);
+                    var data = new MultipartFormDataContent();
+
+                    var content = new StreamContent(stream, 4096);
+                    data.Add(content, "file-name", folder.Name);
+                    var resp = await client.PostAsync(url, data);
+                    if (resp.StatusCode != HttpStatusCode.OK)
+                    {
+                        Console.WriteLine(resp.Content.ReadAsStringAsync().Result);
+                    }
+
+                    partNumber++;
+
+                    break;
                 }
 
-                partNumber++;
+                UploadDescription = "完成";
 
-                break;
+                await NotificationHelper.ShowInfoAsync($"上传完毕");
             }
-
-            UploadDescription = "完成";
-
-            await NotificationHelper.ShowInfoAsync($"上传完毕");
         }
         catch (Exception e)
         {

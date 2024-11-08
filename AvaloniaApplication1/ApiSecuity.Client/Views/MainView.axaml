@@ -77,7 +77,6 @@
             </DockPanel>
         </Border>
 
-
         <Grid ColumnDefinitions="Auto,*"
               RowDefinitions="40,40,40,40"
               HorizontalAlignment="Center"
@@ -107,10 +106,11 @@
                         Spacing="10"
                         Orientation="Horizontal"
                         HorizontalAlignment="Center">
-                <ComboBox ItemsSource="{Binding ClientCollection}"
-                          Width="200"
-                          SelectedItem="{Binding SelectedConnection}"
-                          VerticalAlignment="Center">
+                <ComboBox
+                    Width="200"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding ClientCollection}"
+                    SelectedItem="{Binding SelectedConnection}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
