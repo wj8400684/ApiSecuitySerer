@@ -14,3 +14,6 @@
 *.json
 /ApiSecuityServer.Hub/bin/Release/net9.0
 /AvaloniaApplication1/ApiSecuity.Client/bin/Release/net9.0
+/ApiSecuityServer.Hub/bin/Debug/net9.0
+/ApiSecuityServer.Model/bin/Debug/net9.0
+/ApiSecuityServer.Model/obj
