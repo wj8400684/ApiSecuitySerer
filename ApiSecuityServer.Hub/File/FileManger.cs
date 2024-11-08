@@ -32,7 +32,7 @@ public sealed class FileManger
                 yield return s;
         }
     }
-    
+
     /// <summary>
     /// 添加文件
     /// </summary>
@@ -58,10 +58,10 @@ public sealed class FileManger
     /// 删除文件
     /// </summary>
     /// <param name="fileId"></param>
-    public ValueTask DeleteAsync(string fileId)
+    public ValueTask<bool> DeleteAsync(string fileId)
     {
-        _files.TryRemove(fileId, out var _);
+        var result = _files.TryRemove(fileId, out var _);
 
-        return ValueTask.CompletedTask;
+        return ValueTask.FromResult(result);
     }
 }

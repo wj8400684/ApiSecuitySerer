@@ -1,6 +1,6 @@
-using ApiSecuityServer.Commands;
-using ApiSecuityServer.Dtos;
 using ApiSecuityServer.Hub.Attributes;
+using ApiSecuityServer.Hub.Commands.Web.File;
+using ApiSecuityServer.Model;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -40,15 +40,15 @@ public sealed class FileController(IMediator mediator, IOptions<JsonOptions> opt
     /// <summary>
     /// 删除文件
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="fileId"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     [HttpGet]
-    [Route("delete")]
-    public async ValueTask<ApiResponse> DeleteFileAsync([FromQuery] FileDeleteRequest request,
+    [Route("delete/{fileId:guid}")]
+    public async ValueTask<ApiResponse> DeleteFileAsync(Guid fileId,
         CancellationToken cancellationToken)
     {
-        var command = new FileDeleteCommand(request.FileId);
+        var command = new FileDeleteCommand(fileId.ToString());
         return await mediator.Send(command, cancellationToken);
     }
 

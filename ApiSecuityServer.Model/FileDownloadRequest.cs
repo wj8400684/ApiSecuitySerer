@@ -1,4 +1,4 @@
-namespace ApiSecuityServer.Dtos;
+namespace ApiSecuityServer.Model;
 
 public sealed record FileDownloadRequest(string FileId);
 

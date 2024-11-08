@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ApiSecuityServer.Message\ApiSecuityServer.Message.csproj" />
+      <ProjectReference Include="..\ApiSecuityServer.Model\ApiSecuityServer.Model.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -20,6 +21,10 @@
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0-rc.2.24474.3" />
         <PackageReference Include="Scalar.AspNetCore" Version="1.2.31" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Application\" />
     </ItemGroup>
 
     <PropertyGroup>

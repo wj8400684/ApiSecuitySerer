@@ -1,11 +1,11 @@
-using ApiSecuityServer.Dtos;
 using ApiSecuityServer.Hubs;
+using ApiSecuityServer.Model;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 
-namespace ApiSecuityServer.Commands;
+namespace ApiSecuityServer.Hub.Commands.Web.File;
 
 internal readonly record struct FileUploadCommand(
     HttpContext HttpContext,

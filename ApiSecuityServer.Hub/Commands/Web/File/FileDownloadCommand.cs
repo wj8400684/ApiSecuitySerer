@@ -1,8 +1,8 @@
 using System.Text.Json;
-using ApiSecuityServer.Dtos;
+using ApiSecuityServer.Model;
 using MediatR;
 
-namespace ApiSecuityServer.Commands;
+namespace ApiSecuityServer.Hub.Commands.Web.File;
 
 internal readonly record struct FileDownloadCommand(
     Microsoft.AspNetCore.Mvc.JsonOptions Options,
@@ -44,7 +44,7 @@ internal sealed class FileDownloadCommandHandler(
             await request.WriteErrorAsync(ApiResponse.Error("文件不存在"), 404, cancellationToken);
             return;
         }
-        
+
         logger.LogInformation("用户: [{0}] 下载文件，名称{1} 大小{2}", file.ConnectionId, file.Name, file.Length);
 
         try
