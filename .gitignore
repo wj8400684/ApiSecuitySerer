@@ -17,3 +17,8 @@
 /ApiSecuityServer.Hub/bin/Debug/net9.0
 /ApiSecuityServer.Model/bin/Debug/net9.0
 /ApiSecuityServer.Model/obj
+/ApiSecuityServer.Data/bin/Debug
+/ApiSecuityServer.Data/Migrations
+/ApiSecuityServer.Data/obj
+/ApiSecuityServer.Hub
+/ApiSecuityServer.Model/bin/Debug/net8.0
