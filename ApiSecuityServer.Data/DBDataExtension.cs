@@ -9,7 +9,7 @@ public static class DBDataExtension
 {
     public static void AddSqliteEfCore(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("connectionString");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContextPool<ApplicationDbContext>(optionsAction: options =>
         {
