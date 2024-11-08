@@ -172,23 +172,27 @@ public partial class MainViewModel : ViewModelBase
             var start = 0;
             var end = 0;
 
-            var sizeDescription = stream.Length switch
-            {
-                < 1024 => $"{bufferLength / (double)1024} kb",
-                < 1048576 => $"{bufferLength / (double)1048576} Mb",
-                _ => $"{bufferLength / (double)1073741824} Gb"
-            };
+            var sizeDescription = string.Empty;
 
+            if (stream.Length < 1024)
+                sizeDescription = $"{stream.Length} bit";
+            else if (stream.Length > 1024 && stream.Length < 1048576)//小鱼1m
+                sizeDescription = $"{stream.Length / (double)1024} kb";
+            else if (stream.Length > 1048576 && stream.Length < 1073741824)//小于1g
+                sizeDescription = $"{stream.Length / (double)1048576} mb";
+            else 
+                sizeDescription = $"{stream.Length / (double)1073741824} gb";
+            
             UploadDescription = $"({folder.Name}-{sizeDescription})";
 
             while (true)
             {
                 UploadProgressSize = 0;
 
-
                 var buffer = new byte[bufferLength]; //每次上传10m
-                var size = await stream.ReadAsync(buffer);
+                //var size = await stream.ReadAsync(buffer);
 
+                var size = 100;
                 if (partNumber == 0)
                     start = 0;
                 else
@@ -201,21 +205,22 @@ public partial class MainViewModel : ViewModelBase
                 if (size == 0)
                     break;
 
-                var s = new MemoryStream(buffer);
-                var content = new StreamContent(s, 81960);
                 var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
                 processMessageHander.HttpSendProgress += OnHttpSendProgress;
                 using var client = new HttpClient(processMessageHander);
                 var data = new MultipartFormDataContent();
+
+                var content = new StreamContent(stream, 4096);
                 data.Add(content, "file-name", folder.Name);
                 var resp = await client.PostAsync(url, data);
-
                 if (resp.StatusCode != HttpStatusCode.OK)
                 {
                     Console.WriteLine(resp.Content.ReadAsStringAsync().Result);
                 }
 
                 partNumber++;
+                
+                break;
             }
 
             UploadDescription = "完成";
@@ -363,12 +368,16 @@ public partial class MainViewModel : ViewModelBase
             var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www",
                 Path.GetRandomFileName() + arg.FileName);
 
-            var sizeDescription = arg.FileSize switch
-            {
-                < 1024 => $"{arg.FileSize} kb",
-                < 1024 * 1024 => $"{arg.FileSize / 1024 / 1024} Mb",
-                _ => $"{arg.FileSize / 1024 / 1024 / 1024} Gb"
-            };
+            var sizeDescription = string.Empty;
+
+            if (arg.FileSize < 1024)
+                sizeDescription = $"{arg.FileSize} bit";
+            else if (arg.FileSize > 1024 && arg.FileSize< 1048576)//小鱼1m
+                sizeDescription = $"{arg.FileSize / (double)1024} kb";
+            else if (arg.FileSize > 1048576 && arg.FileSize < 1073741824)//小于1g
+                sizeDescription = $"{arg.FileSize / (double)1048576} mb";
+            else 
+                sizeDescription = $"{arg.FileSize / (double)1073741824} gb";
 
             DownloadDescription = $"({arg.FileName}-{sizeDescription})";
 
