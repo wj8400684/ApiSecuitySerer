@@ -39,7 +39,7 @@ internal sealed class FileUploadCommandHandler(
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
 
-        var boundary = GetBoundary(mediaType.Boundary.Value);
+        var boundary = mediaType.Boundary.Value!;
 
         if (string.IsNullOrWhiteSpace(boundary))
             return ApiResponse.Fail<FileUpdateResultModel>(

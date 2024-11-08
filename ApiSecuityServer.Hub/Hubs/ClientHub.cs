@@ -1,21 +1,20 @@
-using ApiSecuityServer.Hub.Hubs;
+using ApiSecuityServer.Commands.Hub;
+using MediatR;
 using Microsoft.AspNetCore.SignalR;
 
 namespace ApiSecuityServer.Hubs;
 
-public sealed class ClientHub(ClientHubContainer container, ILogger<ClientHub> logger) : Hub<IClientApi>
+public sealed class ClientHub(IMediator mediator, ILogger<ClientHub> logger) : Hub<IClientApi>
 {
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
-        container.Add(Context);
-        logger.LogInformation("Client connected {0}", Context.ConnectionId);
-        return base.OnConnectedAsync();
+        var notification = new ClientConnectionNotification(Context, Groups);
+        await mediator.Publish(notification, Context.ConnectionAborted);
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        container.Remove(Context.ConnectionId);
-        logger.LogInformation("Client disconnected {0}", Context.ConnectionId);
-        return base.OnDisconnectedAsync(exception);
+        var notification = new ClientDisconnectionNotification();
+        await mediator.Publish(notification, Context.ConnectionAborted);
     }
 }

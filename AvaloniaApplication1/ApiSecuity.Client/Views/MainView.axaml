@@ -18,6 +18,21 @@
                 Spacing="10"
                 Orientation="Vertical">
 
+        <StackPanel Orientation="Horizontal"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Spacing="10">
+            <TextBlock Text="用户名："
+                       VerticalAlignment="Center" />
+            <TextBox HorizontalAlignment="Left"
+                     Text="{Binding NickName, UpdateSourceTrigger=PropertyChanged}"
+                     Width="200" />
+            <Button Content="连接服务器"
+                    IsEnabled="{Binding !IsConnected}"
+                    Command="{Binding ConnectCommand}" />
+        </StackPanel>
+
+
         <Border Classes="Shadow"
                 Padding="15"
                 CornerRadius="15"
@@ -62,13 +77,9 @@
             </DockPanel>
         </Border>
 
-        <Button Content="连接服务器"
-                IsEnabled="{Binding !IsConnected}"
-                Command="{Binding ConnectCommand}" />
 
-        
         <Grid ColumnDefinitions="Auto,*"
-              RowDefinitions="40,40,40"
+              RowDefinitions="40,40,40,40"
               HorizontalAlignment="Center"
               VerticalAlignment="Center">
             <TextBlock Text="当前连接id："
@@ -96,8 +107,20 @@
                         Spacing="10"
                         Orientation="Horizontal"
                         HorizontalAlignment="Center">
-                <TextBox Text="{Binding TargetConnectionId, UpdateSourceTrigger=PropertyChanged}"
-                         Width="200" />
+                <ComboBox ItemsSource="{Binding ClientCollection}"
+                          Width="200"
+                          SelectedItem="{Binding SelectedConnection}"
+                          VerticalAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding NickName}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <Button Content="发送文件"
                         IsEnabled="{Binding IsConnected}"
                         Command="{Binding FileUploadedCommand}" />
@@ -108,12 +131,14 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Center"
                         Spacing="10">
-             
-                <ComboBox ItemsSource=""/>
-                
+
+                <TextBox Text="{Binding TargetFileId, UpdateSourceTrigger=PropertyChanged}"
+                         Width="200" />
+
                 <Button Content="下载文件"
                         IsEnabled="{Binding IsConnected}"
                         Command="{Binding FileDownloadedCommand}" />
+
             </StackPanel>
         </Grid>
 

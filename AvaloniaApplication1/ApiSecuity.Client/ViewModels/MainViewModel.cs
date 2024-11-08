@@ -8,6 +8,7 @@ using System.Net.Http.Handlers;
 using System.Threading;
 using System.Threading.Tasks;
 using ApiSecuity.Client.Helper;
+using ApiSecuity.Client.Model;
 using ApiSecuityServer.Message;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -20,8 +21,9 @@ namespace ApiSecuity.Client.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private IStorageProvider _storageProvider = null!;
-    private const string HostUrl = "192.168.124.86:6767";
-    private readonly HubConnection _connection;
+    private const string HostUrl = "localhost:6767";
+    private HubConnection _connection = null!;
+    private readonly SemaphoreSlim _semaphore = new(1);
     private readonly AsyncQueue<DownloadFileMessage> _downloadQueue = new();
 
     [ObservableProperty] private string? _targetFileId;
@@ -34,25 +36,34 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string? _downloadProgress;
     [ObservableProperty] private string? _downloadDescription;
     [ObservableProperty] private string? _uploadDescription;
-    [ObservableProperty] private ObservableCollection<ConnectionEventMessage> _clients = [];
+    [ObservableProperty] private string? _nickName;
+    [ObservableProperty] private ConnectionModel? _selectedConnection;
+    [ObservableProperty] private ObservableCollection<ConnectionModel> _clientCollection = [];
 
     public MainViewModel()
     {
+        ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
+    }
+
+    private void NewHubConnection()
+    {
         _connection = new HubConnectionBuilder()
-            .WithUrl($"ws://{HostUrl}/chat")
+            .WithUrl(
+                $"ws://{HostUrl}/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
 
-        _connection.Closed += OnClosedAsync;
-        _connection.RegisterHandler<ConnectionInfoMessage>(ServerClientApiCommand.ConnectionInfo,
-            OnConnectionInfoMessage);
-        _connection.RegisterHandler<DownloadFileMessage>(ServerClientApiCommand.DownloadFiles,
-            OnPublishDownloadAsync);
-
-        ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
+        _connection.Closed += OnClosedHandlerAsync;
+        _connection.RegisterHandler<ConnectionInfoMessage>(ServerClientApiCommand.SyncConnectionInfo,
+            OnSyncConnectionInfoHandlerMessage);
+        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.PushConnectionEvent,
+            OnConnectionEventHandlerAsync);
+        _connection.RegisterHandler<ConnectionEventMessage>(ServerClientApiCommand.PushDisConnectionEvent,
+            OnDisconnectionEventHandlerAsync);
+        _connection.RegisterHandler<DownloadFileMessage>(ServerClientApiCommand.PushDownloadDataEvent,
+            OnDownloadDataHandlerAsync);
     }
-
 
     public void SetStorageProvider(IStorageProvider storageProvider)
     {
@@ -64,6 +75,14 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnConnectAsync()
     {
+        if (string.IsNullOrWhiteSpace(NickName))
+        {
+            await NotificationHelper.ShowErrorAsync("清先设置用户名");
+            return;
+        }
+
+        NewHubConnection();
+
         IsConnected = false;
 
         try
@@ -110,6 +129,12 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
+        if (SelectedConnection == null)
+        {
+            await NotificationHelper.ShowErrorAsync("请选择客户端");
+            return;
+        }
+        
         try
         {
             var folders = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -129,7 +154,7 @@ public partial class MainViewModel : ViewModelBase
 
             await NotificationHelper.ShowInfoAsync($"正在上传");
 
-            long bufferLength = 1024 * 1024 * 100; //100m
+            long bufferLength = 1024 * 1024 * 1000; //100m
 
             if (stream.Length < bufferLength) //大于500m才需要分组上传
                 bufferLength = stream.Length;
@@ -141,7 +166,7 @@ public partial class MainViewModel : ViewModelBase
 
             //var url = $"http://{HostUrl}/api/file/upload";
             var url1 =
-                $"http://{HostUrl}/api/file/upload?ConnectionId={TargetConnectionId}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
+                $"http://{HostUrl}/api/file/upload?ConnectionId={SelectedConnection.Id}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
 
             var partNumber = 0;
             var start = 0;
@@ -224,24 +249,106 @@ public partial class MainViewModel : ViewModelBase
 
     #region hubcallback
 
-    private async Task OnClosedAsync(Exception? arg)
+    private async Task OnClosedHandlerAsync(Exception? arg)
     {
         await NotificationHelper.ShowErrorAsync($"断开连接{arg?.Message}");
     }
 
-    private Task OnConnectionInfoMessage(ConnectionInfoMessage arg)
+    /// <summary>
+    /// 同步其他客户端连接信息
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    private async Task OnSyncConnectionInfoHandlerMessage(ConnectionInfoMessage arg)
     {
-        foreach (var client in arg.Clients)
+        await _semaphore.WaitAsync();
+
+        try
         {
-            Clients.Add(new ConnectionEventMessage());
+            for (var j = 0; j < ClientCollection.Count; j++)
+            {
+                ClientCollection.RemoveAt(j);
+            }
+
+            foreach (var connection in arg.Clients)
+            {
+                ClientCollection.Add(new ConnectionModel
+                {
+                    Id = connection.ConnectionId,
+                    Host = connection.Host,
+                    Port = connection.Port,
+                    NickName = connection.NickName,
+                    Platform = 1,
+                });
+            }
+        }
+        finally
+        {
+            _semaphore.Release();
         }
     }
 
-    private async Task OnPublishDownloadAsync(DownloadFileMessage arg)
+    /// <summary>
+    /// 下载通知
+    /// </summary>
+    /// <param name="arg"></param>
+    private async Task OnDownloadDataHandlerAsync(DownloadFileMessage arg)
     {
         await NotificationHelper.ShowInfoAsync($"推送下载 {arg.FileName} 文件大小 {arg.FileSize}");
 
         _downloadQueue.Enqueue(arg);
+    }
+
+    /// <summary>
+    /// 断开连接通知
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    private async Task OnDisconnectionEventHandlerAsync(ConnectionEventMessage arg)
+    {
+        await NotificationHelper.ShowInfoAsync($"{arg.NickName} 离线");
+
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            var connections = ClientCollection.ToList();
+
+            foreach (var c in connections.Where(c => c.Id == arg.ConnectionId))
+                ClientCollection.Remove(c);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 连接通知
+    /// </summary>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    private async Task OnConnectionEventHandlerAsync(ConnectionEventMessage arg)
+    {
+        await NotificationHelper.ShowInfoAsync($"{arg.NickName} 上线");
+
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            ClientCollection.Add(new ConnectionModel
+            {
+                Id = arg.ConnectionId,
+                Host = arg.Host,
+                Port = arg.Port,
+                NickName = arg.NickName,
+                Platform = 1,
+            });
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     #endregion

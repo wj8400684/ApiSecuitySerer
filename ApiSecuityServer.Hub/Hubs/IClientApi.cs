@@ -12,7 +12,7 @@ public interface IClientApi
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    [HubClientApiCommand(ServerClientApiCommand.DownloadFiles)]
+    [HubClientApiCommand(ServerClientApiCommand.PushDownloadDataEvent)]
     Task PublishDownloadFileAsync(DownloadFileMessage message);    
     
     /// <summary>
@@ -20,6 +20,22 @@ public interface IClientApi
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    [HubClientApiCommand(ServerClientApiCommand.ConnectionInfo)]
-    Task PublishConnectionInfoAsync(ConnectionInfoMessage message);
+    [HubClientApiCommand(ServerClientApiCommand.SyncConnectionInfo)]
+    Task PublishSyncConnectionInfoAsync(ConnectionInfoMessage message);
+    
+    /// <summary>
+    /// 推送连接事件
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    [HubClientApiCommand(ServerClientApiCommand.PushConnectionEvent)]
+    Task PushConnectionEventAsync(ConnectionEventMessage message);
+
+    /// <summary>
+    /// 推送断开事件
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    [HubClientApiCommand(ServerClientApiCommand.PushDisConnectionEvent)]
+    Task PushDisConnectionEventAsync(ConnectionEventMessage message);
 }

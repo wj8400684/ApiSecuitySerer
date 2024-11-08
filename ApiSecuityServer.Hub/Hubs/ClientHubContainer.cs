@@ -12,6 +12,13 @@ public sealed class ClientHubContainer
         _concurrent.TryAdd(context.ConnectionId, context);
     }
 
+    public void CopyTo(out HubCallerContext[] contextArray)
+    {
+        contextArray = new HubCallerContext[_concurrent.Count];
+
+        _concurrent.Values.CopyTo(contextArray, 0);
+    }
+    
     public HubCallerContext? GetById(string id)
     {
         _concurrent.TryGetValue(id, out var context);
