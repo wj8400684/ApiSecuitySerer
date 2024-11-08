@@ -68,9 +68,12 @@ public sealed class AsyncQueue<T> : IDisposable
 
     public async IAsyncEnumerable<T> ReadAsync([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-       yield return await DequeueAsync(cancellationToken);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            yield return await DequeueAsync(cancellationToken);
+        }
     }
-    
+
     public ValueTask<T> DequeueAsync(CancellationToken cancellationToken = default)
     {
         LinkedListNode<CancelableCompletionSource<T>>? node;
