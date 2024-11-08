@@ -25,6 +25,7 @@ public partial class MainViewModel : ViewModelBase
     private HubConnection _connection = null!;
     private readonly SemaphoreSlim _semaphore = new(1);
     private readonly AsyncQueue<DownloadFileMessage> _downloadQueue = new();
+    private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www");
 
     [ObservableProperty] private string? _targetFileId;
     [ObservableProperty] private string? _targetConnectionId;
@@ -42,6 +43,9 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
+        if (!Directory.Exists(FilePath))
+            Directory.CreateDirectory(FilePath);
+
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
     }
 
@@ -176,13 +180,13 @@ public partial class MainViewModel : ViewModelBase
 
             if (stream.Length < 1024)
                 sizeDescription = $"{stream.Length} bit";
-            else if (stream.Length > 1024 && stream.Length < 1048576)//小鱼1m
+            else if (stream.Length > 1024 && stream.Length < 1048576) //小鱼1m
                 sizeDescription = $"{stream.Length / (double)1024} kb";
-            else if (stream.Length > 1048576 && stream.Length < 1073741824)//小于1g
+            else if (stream.Length > 1048576 && stream.Length < 1073741824) //小于1g
                 sizeDescription = $"{stream.Length / (double)1048576} mb";
-            else 
+            else
                 sizeDescription = $"{stream.Length / (double)1073741824} gb";
-            
+
             UploadDescription = $"({folder.Name}-{sizeDescription})";
 
             while (true)
@@ -219,7 +223,7 @@ public partial class MainViewModel : ViewModelBase
                 }
 
                 partNumber++;
-                
+
                 break;
             }
 
@@ -259,7 +263,23 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task OnClosedHandlerAsync(Exception? arg)
     {
+        IsConnected = false;
+
         await NotificationHelper.ShowErrorAsync($"断开连接{arg?.Message}");
+
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            for (var i = 0; i < ClientCollection.Count; i++)
+            {
+                ClientCollection.RemoveAt(i);
+            }
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     /// <summary>
@@ -365,24 +385,23 @@ public partial class MainViewModel : ViewModelBase
     {
         await foreach (var arg in _downloadQueue.ReadAsync(CancellationToken.None))
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "www",
-                Path.GetRandomFileName() + arg.FileName);
-
-            var sizeDescription = string.Empty;
-
-            if (arg.FileSize < 1024)
-                sizeDescription = $"{arg.FileSize} bit";
-            else if (arg.FileSize > 1024 && arg.FileSize< 1048576)//小鱼1m
-                sizeDescription = $"{arg.FileSize / (double)1024} kb";
-            else if (arg.FileSize > 1048576 && arg.FileSize < 1073741824)//小于1g
-                sizeDescription = $"{arg.FileSize / (double)1048576} mb";
-            else 
-                sizeDescription = $"{arg.FileSize / (double)1073741824} gb";
-
-            DownloadDescription = $"({arg.FileName}-{sizeDescription})";
-
             try
             {
+                var path = Path.Combine(FilePath, arg.FileName);
+
+                var sizeDescription = string.Empty;
+
+                if (arg.FileSize < 1024)
+                    sizeDescription = $"{arg.FileSize} bit";
+                else if (arg.FileSize > 1024 && arg.FileSize < 1048576) //小鱼1m
+                    sizeDescription = $"{arg.FileSize / (double)1024} kb";
+                else if (arg.FileSize > 1048576 && arg.FileSize < 1073741824) //小于1g
+                    sizeDescription = $"{arg.FileSize / (double)1048576} mb";
+                else
+                    sizeDescription = $"{arg.FileSize / (double)1073741824} gb";
+
+                DownloadDescription = $"({arg.FileName}-{sizeDescription})";
+
                 DownloadProgressSize = 0;
                 var url = $"http://{HostUrl}/api/file/download/{arg.FileId}";
                 //获取到文件总大小 通过head请求
