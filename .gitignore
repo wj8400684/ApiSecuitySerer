@@ -10,3 +10,7 @@
 /AvaloniaApplication1/ApiSecuity.Client.Desktop
 /AvaloniaApplication1/ApiSecuity.Client/bin/Debug/net9.0
 /AvaloniaApplication1/ApiSecuity.Client/obj
+/.vs/ProjectEvaluation
+*.json
+/ApiSecuityServer.Hub/bin/Release/net9.0
+/AvaloniaApplication1/ApiSecuity.Client/bin/Release/net9.0
