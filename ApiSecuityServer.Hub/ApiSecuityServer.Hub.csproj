@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ApiSecuityServer.Data\ApiSecuityServer.Data.csproj" />
       <ProjectReference Include="..\ApiSecuityServer.Message\ApiSecuityServer.Message.csproj" />
       <ProjectReference Include="..\ApiSecuityServer.Model\ApiSecuityServer.Model.csproj" />
     </ItemGroup>
@@ -20,11 +21,15 @@
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0-rc.2.24474.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0-rc.2.24474.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Scalar.AspNetCore" Version="1.2.31" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Application\" />
+      <Folder Include="Application\Abstractions\" />
     </ItemGroup>
 
     <PropertyGroup>

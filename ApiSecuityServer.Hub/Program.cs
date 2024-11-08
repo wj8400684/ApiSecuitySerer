@@ -1,6 +1,8 @@
 using ApiSecuityServer;
+using ApiSecuityServer.Data;
 using ApiSecuityServer.Hub.Hubs;
 using ApiSecuityServer.Hubs;
+using FluentValidation;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.ConfigureAllOptions();
 builder.Services.AddAndSetOptionsControllers();
+builder.Services.AddSqliteEfCore(builder.Configuration);
+builder.Services.AddValidatorsFromAssembly(AssemblyReference.Assembly, includeInternalTypes: true);
 builder.Services.AddSingleton<FileManger>();
 
 var app = builder.Build();

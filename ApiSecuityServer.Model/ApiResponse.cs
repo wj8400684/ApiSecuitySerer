@@ -17,7 +17,7 @@ public class ApiResponse
         new() { SuccessFul = false, ErrorMessage = errorMessage };
 }
 
-public sealed class ApiResponse<TResultModel> where TResultModel : class
+public sealed class ApiResponse<TResultModel> 
 {
     public bool SuccessFul { get; set; }
 
@@ -31,9 +31,21 @@ public sealed class ApiResponse<TResultModel> where TResultModel : class
     {
     }
 
-    public ApiResponse(TResultModel value)
+    public ApiResponse(TResultModel content)
     {
-        Content = value;
+        Content = content;
+    }
+
+    public ApiResponse(string errorMessage)
+    {
+        ErrorMessage = errorMessage;
+    }
+
+    public ApiResponse(string errorMessage, bool successFul, int errorCode)
+    {
+        ErrorMessage = errorMessage;
+        SuccessFul = successFul;
+        ErrorCode = errorCode;
     }
 
     /// <summary>
