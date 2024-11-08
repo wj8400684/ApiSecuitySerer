@@ -21,7 +21,7 @@ namespace ApiSecuity.Client.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private IStorageProvider _storageProvider = null!;
-    private const string HostUrl = "localhost:6767";
+    private const string HostUrl = "192.168.124.86:6767";
     private HubConnection _connection = null!;
     private readonly SemaphoreSlim _semaphore = new(1);
     private readonly AsyncQueue<DownloadFileMessage> _downloadQueue = new();
@@ -134,7 +134,7 @@ public partial class MainViewModel : ViewModelBase
             await NotificationHelper.ShowErrorAsync("请选择客户端");
             return;
         }
-        
+
         try
         {
             var folders = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -171,18 +171,20 @@ public partial class MainViewModel : ViewModelBase
             var partNumber = 0;
             var start = 0;
             var end = 0;
-            UploadProgressSize = 0;
+
+            var sizeDescription = stream.Length switch
+            {
+                < 1024 => $"{bufferLength / (double)1024} kb",
+                < 1048576 => $"{bufferLength / (double)1048576} Mb",
+                _ => $"{bufferLength / (double)1073741824} Gb"
+            };
+
+            UploadDescription = $"({folder.Name}-{sizeDescription})";
 
             while (true)
             {
-                var sizeDescription = bufferLength switch
-                {
-                    < 1024 => $"{bufferLength} kb",
-                    < 1024 * 1024 => $"{bufferLength / 1024 / 1024} Mb",
-                    _ => $"{bufferLength / 1024 / 1024 / 1024} Gb"
-                };
+                UploadProgressSize = 0;
 
-                UploadDescription = $"({folder.Name}-{sizeDescription})";
 
                 var buffer = new byte[bufferLength]; //每次上传10m
                 var size = await stream.ReadAsync(buffer);
@@ -199,7 +201,8 @@ public partial class MainViewModel : ViewModelBase
                 if (size == 0)
                     break;
 
-                var content = new ByteArrayContent(buffer, 0, size);
+                var s = new MemoryStream(buffer);
+                var content = new StreamContent(s, 81960);
                 var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
                 processMessageHander.HttpSendProgress += OnHttpSendProgress;
                 using var client = new HttpClient(processMessageHander);
@@ -232,8 +235,8 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="e"></param>
     private void OnHttpSendProgress(object? sender, HttpProgressEventArgs e)
     {
-        DownloadProgress = $"{e.ProgressPercentage}%";
         UploadProgressSize = e.ProgressPercentage;
+        Console.WriteLine(e.ProgressPercentage);
     }
 
     /// <summary>

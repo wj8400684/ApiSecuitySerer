@@ -14,7 +14,7 @@ public sealed class ClientHub(IMediator mediator, ILogger<ClientHub> logger) : H
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var notification = new ClientDisconnectionNotification();
+        var notification = new ClientDisconnectionNotification(Context, Groups);
         await mediator.Publish(notification, Context.ConnectionAborted);
     }
 }

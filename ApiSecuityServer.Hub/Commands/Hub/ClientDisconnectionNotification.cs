@@ -19,14 +19,14 @@ internal sealed class ClientDisconnectionNotificationHandler(
         var context = notification.Context;
         var group = notification.Group;
 
-        var userInfo = notification.Context.Features.Get<ClientUserInfo>();
+        container.Remove(context.ConnectionId);
+        
+        var userInfo = context.Features.Get<ClientUserInfo>();
 
         if (userInfo == null)
             return;
 
         logger.LogInformation("{0} 断开连接", userInfo.NickName);
-
-        container.Remove(context.ConnectionId);
 
         await group.RemoveFromGroupAsync(context.ConnectionId, userInfo.GroupName, cancellationToken);
 
