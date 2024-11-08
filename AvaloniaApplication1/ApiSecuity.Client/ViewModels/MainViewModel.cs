@@ -255,6 +255,7 @@ public partial class MainViewModel : ViewModelBase
     /// <param name="e"></param>
     private void OnHttpReceiveProgress(object? sender, HttpProgressEventArgs e)
     {
+        Console.WriteLine(e.ProgressPercentage);
     }
 
     #endregion
@@ -425,7 +426,7 @@ public partial class MainViewModel : ViewModelBase
                     DownloadProgressSize = (totalBytesRead / arg.FileSize) * 100;
                 }
 
-                DownloadDescription = "完成";
+                DownloadDescription = $"{arg.FileName} 完成";
                 await NotificationHelper.ShowInfoAsync($"下载完毕 {arg.FileName} 文件大小 {arg.FileSize}");
             }
             catch (Exception e)
