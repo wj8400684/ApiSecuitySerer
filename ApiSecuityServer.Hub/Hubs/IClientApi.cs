@@ -7,6 +7,19 @@ namespace ApiSecuityServer.Hubs;
 
 public interface IClientApi
 {
-    [HubClientApiCommand(ServerClientApiCommand.PublishDownload)]
-    Task PublishDownloadFileAsync(PublishDownloadMessage message);    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    [HubClientApiCommand(ServerClientApiCommand.DownloadFiles)]
+    Task PublishDownloadFileAsync(DownloadFileMessage message);    
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    [HubClientApiCommand(ServerClientApiCommand.ConnectionInfo)]
+    Task PublishConnectionInfoAsync(ConnectionInfoMessage message);
 }

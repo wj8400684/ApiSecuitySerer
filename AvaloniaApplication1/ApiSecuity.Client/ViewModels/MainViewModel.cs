@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Handlers;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ApiSecuity.Client.Helper;
@@ -24,7 +22,7 @@ public partial class MainViewModel : ViewModelBase
     private IStorageProvider _storageProvider = null!;
     private const string HostUrl = "192.168.124.86:6767";
     private readonly HubConnection _connection;
-    private readonly AsyncQueue<PublishDownloadMessage> _downloadQueue = new();
+    private readonly AsyncQueue<DownloadFileMessage> _downloadQueue = new();
 
     [ObservableProperty] private string? _targetFileId;
     [ObservableProperty] private string? _targetConnectionId;
@@ -36,6 +34,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string? _downloadProgress;
     [ObservableProperty] private string? _downloadDescription;
     [ObservableProperty] private string? _uploadDescription;
+    [ObservableProperty] private ObservableCollection<ConnectionEventMessage> _clients = [];
 
     public MainViewModel()
     {
@@ -46,7 +45,9 @@ public partial class MainViewModel : ViewModelBase
             .Build();
 
         _connection.Closed += OnClosedAsync;
-        _connection.RegisterHandler<PublishDownloadMessage>(ServerClientApiCommand.PublishDownload,
+        _connection.RegisterHandler<ConnectionInfoMessage>(ServerClientApiCommand.ConnectionInfo,
+            OnConnectionInfoMessage);
+        _connection.RegisterHandler<DownloadFileMessage>(ServerClientApiCommand.DownloadFiles,
             OnPublishDownloadAsync);
 
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
@@ -190,7 +191,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             UploadDescription = "完成";
-            
+
             await NotificationHelper.ShowInfoAsync($"上传完毕");
         }
         catch (Exception e)
@@ -228,7 +229,15 @@ public partial class MainViewModel : ViewModelBase
         await NotificationHelper.ShowErrorAsync($"断开连接{arg?.Message}");
     }
 
-    private async Task OnPublishDownloadAsync(PublishDownloadMessage arg)
+    private Task OnConnectionInfoMessage(ConnectionInfoMessage arg)
+    {
+        foreach (var client in arg.Clients)
+        {
+            Clients.Add(new ConnectionEventMessage());
+        }
+    }
+
+    private async Task OnPublishDownloadAsync(DownloadFileMessage arg)
     {
         await NotificationHelper.ShowInfoAsync($"推送下载 {arg.FileName} 文件大小 {arg.FileSize}");
 

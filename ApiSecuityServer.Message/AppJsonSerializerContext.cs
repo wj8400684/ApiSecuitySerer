@@ -2,8 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace ApiSecuityServer.Message;
 
-[JsonSerializable(typeof(PublishChatMessage))]
-[JsonSerializable(typeof(PublishDownloadMessage))]
+[JsonSerializable(typeof(ChatMessage))]
+[JsonSerializable(typeof(DownloadFileMessage))]
+[JsonSerializable(typeof(ConnectionEventMessage))]
+[JsonSerializable(typeof(ConnectionInfoMessage))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }

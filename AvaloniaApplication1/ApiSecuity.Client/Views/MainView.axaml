@@ -18,10 +18,55 @@
                 Spacing="10"
                 Orientation="Vertical">
 
+        <Border Classes="Shadow"
+                Padding="15"
+                CornerRadius="15"
+                Background="{DynamicResource SemiLightGreen0}"
+                Theme="{DynamicResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top">
+                    <Run FontSize="16"
+                         FontWeight="Bold"
+                         Text="正在下载：" />
+                    <Run Text="{Binding DownloadDescription}"
+                         FontSize="16" />
+                </TextBlock>
+                <ProgressBar
+                    Margin="0,20,0,0"
+                    Maximum="100"
+                    Minimum="0"
+                    ShowProgressText="True"
+                    Value="{Binding DownloadProgressSize}" />
+            </DockPanel>
+        </Border>
+
+        <Border Classes="Shadow"
+                Padding="15"
+                CornerRadius="15"
+                Background="{DynamicResource SemiCyan0}"
+                Theme="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top">
+                    <Run FontSize="16"
+                         FontWeight="Bold"
+                         Text="正在上传：" />
+                    <Run Text="{Binding UploadDescription}"
+                         FontSize="16" />
+                </TextBlock>
+                <ProgressBar Margin="0,20,0,0"
+                             Maximum="100"
+                             Minimum="0"
+                             Classes="Danger"
+                             ShowProgressText="True"
+                             Value="{Binding UploadProgressSize}" />
+            </DockPanel>
+        </Border>
+
         <Button Content="连接服务器"
                 IsEnabled="{Binding !IsConnected}"
                 Command="{Binding ConnectCommand}" />
 
+        
         <Grid ColumnDefinitions="Auto,*"
               RowDefinitions="40,40,40"
               HorizontalAlignment="Center"
@@ -63,56 +108,14 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Center"
                         Spacing="10">
-                <TextBox Text="{Binding TargetFileId}"
-                         Width="200" />
+             
+                <ComboBox ItemsSource=""/>
+                
                 <Button Content="下载文件"
                         IsEnabled="{Binding IsConnected}"
                         Command="{Binding FileDownloadedCommand}" />
             </StackPanel>
         </Grid>
-
-        <Border Classes="Shadow"
-                Padding="15"
-                CornerRadius="15"
-                Theme="{StaticResource CardBorder}">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Top">
-                    <Run FontSize="16"
-                         FontWeight="Bold"
-                         Text="正在下载：" />
-                    <Run Text="{Binding DownloadDescription}"
-                         FontSize="16" />
-                </TextBlock>
-                <ProgressBar
-                    Margin="0,20,0,0"
-                    Maximum="100"
-                    Minimum="0"
-                    ShowProgressText="True"
-                    Value="{Binding DownloadProgressSize}" />
-            </DockPanel>
-        </Border>
-
-        <Border Classes="Shadow"
-                Padding="15"
-                CornerRadius="15"
-                Theme="{StaticResource CardBorder}">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Top">
-                    <Run FontSize="16"
-                         FontWeight="Bold"
-                         Text="正在上传：" />
-                    <Run Text="{Binding UploadDescription}"
-                         FontSize="16" />
-                </TextBlock>
-                <ProgressBar Margin="0,20,0,0"
-                             Maximum="100"
-                             Minimum="0"
-                             Classes="Danger"
-                             ShowProgressText="True"
-                             Value="{Binding UploadProgressSize}" />
-            </DockPanel>
-        </Border>
-
 
     </StackPanel>
 </UserControl>

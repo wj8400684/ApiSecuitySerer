@@ -82,6 +82,6 @@ public sealed class FileTransferStream(
     /// </summary>
     public async ValueTask PublishDownloadAsync()
     {
-        await clientApi.PublishDownloadFileAsync(new PublishDownloadMessage(Id, Name, Size, partNumber));
+        await clientApi.PublishDownloadFileAsync(new DownloadFileMessage(Id, Name, Size, partNumber));
     }
 }
