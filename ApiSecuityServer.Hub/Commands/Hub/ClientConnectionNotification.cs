@@ -63,7 +63,7 @@ internal sealed class ClientConnectionNotificationHandler(
 
         var message = new ConnectionEventMessage(
             ConnectionId: context.ConnectionId,
-            NickName: context.ConnectionId,
+            NickName: userInfo.NickName,
             Platform: 1,
             Host: "userInfo.Host",
             Port: userInfo.Port);
