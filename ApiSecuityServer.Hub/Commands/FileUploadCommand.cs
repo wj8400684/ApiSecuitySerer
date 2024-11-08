@@ -29,6 +29,8 @@ internal sealed class FileUploadCommandHandler(
     public async Task<ApiResponse<FileUpdateResultModel>> Handle(FileUploadCommand request,
         CancellationToken cancellationToken)
     {
+        logger.LogInformation("用户: [{0}] 上传文件，名称{1} 大小{2}", request.ConnectionId, request.FileName, request.Total);
+
         if (!MediaTypeHeaderValue.TryParse(request.HttpContext.Request.ContentType, out var mediaType))
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
@@ -37,17 +39,23 @@ internal sealed class FileUploadCommandHandler(
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
 
-        var boundary = GetBoundary(request.HttpContext);
+        var boundary = GetBoundary(mediaType.Boundary.Value);
 
         if (string.IsNullOrWhiteSpace(boundary))
             return ApiResponse.Fail<FileUpdateResultModel>(
                 "ContentType不正确");
 
         var reader = new MultipartReader(boundary, request.HttpContext.Request.Body);
-        var file = new FileTransferStream("", request.FileName, request.Total, request.Size,
-            _hubClients.Clients(request.ConnectionId), fileManger, reader);
+        var file = new FileTransferStream(
+            id: request.ConnectionId,
+            fileName: request.FileName,
+            fileSize: request.Total,
+            bufferSize: request.Size,
+            multipartReader: reader,
+            partNumber: request.PartNumber,
+            clientApi: _hubClients.Clients(request.ConnectionId));
 
-        file.Add();
+        fileManger.AddFile(file);
 
         try
         {
@@ -55,17 +63,17 @@ internal sealed class FileUploadCommandHandler(
         }
         catch (Exception e)
         {
-            file.Remove();
+            await fileManger.DeleteAsync(file.Id);
             return ApiResponse.Fail<FileUpdateResultModel>(e.Message);
         }
 
         try
         {
-            await file.ReadFileAsync(cancellationToken);
+            await file.WriterAsync(cancellationToken);
         }
         catch (Exception e)
         {
-            file.Remove();
+            await fileManger.DeleteAsync(file.Id);
             return ApiResponse.Fail<FileUpdateResultModel>(e.Message);
         }
         finally
@@ -76,9 +84,9 @@ internal sealed class FileUploadCommandHandler(
         return new FileUpdateResultModel(file.Id);
     }
 
-    private static string? GetBoundary(HttpContext httpContent)
+    private static string? GetBoundary(string contentType)
     {
-        var mediaTypeHeaderContentType = MediaTypeHeaderValue.Parse(httpContent.Request.ContentType);
+        var mediaTypeHeaderContentType = MediaTypeHeaderValue.Parse(contentType);
 
         return HeaderUtilities.RemoveQuotes(mediaTypeHeaderContentType.Boundary).Value;
     }

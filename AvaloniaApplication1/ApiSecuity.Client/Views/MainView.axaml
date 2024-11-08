@@ -14,7 +14,7 @@
     </Design.DataContext>
 
     <StackPanel VerticalAlignment="Top"
-                Margin="0,30,0,0"
+                Margin="10,30,10,0"
                 Spacing="10"
                 Orientation="Vertical">
 
@@ -71,21 +71,48 @@
             </StackPanel>
         </Grid>
 
+        <Border Classes="Shadow"
+                Padding="15"
+                CornerRadius="15"
+                Theme="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top">
+                    <Run FontSize="16"
+                         FontWeight="Bold"
+                         Text="正在下载：" />
+                    <Run Text="{Binding DownloadDescription}"
+                         FontSize="16" />
+                </TextBlock>
+                <ProgressBar
+                    Margin="0,20,0,0"
+                    Maximum="100"
+                    Minimum="0"
+                    ShowProgressText="True"
+                    Value="{Binding DownloadProgressSize}" />
+            </DockPanel>
+        </Border>
 
-        <DockPanel Margin="10">
-            <TextBlock Text="下载进度" />
-            <ProgressBar Margin="10,0,0,0"
-                         Maximum="100"
-                         Minimum="0"
-                         Value="{Binding DownloadProgressSize}" />
-        </DockPanel>
+        <Border Classes="Shadow"
+                Padding="15"
+                CornerRadius="15"
+                Theme="{StaticResource CardBorder}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top">
+                    <Run FontSize="16"
+                         FontWeight="Bold"
+                         Text="正在上传：" />
+                    <Run Text="{Binding UploadDescription}"
+                         FontSize="16" />
+                </TextBlock>
+                <ProgressBar Margin="0,20,0,0"
+                             Maximum="100"
+                             Minimum="0"
+                             Classes="Danger"
+                             ShowProgressText="True"
+                             Value="{Binding UploadProgressSize}" />
+            </DockPanel>
+        </Border>
 
-        <DockPanel Margin="10">
-            <TextBlock Text="上传进度" />
-            <ProgressBar Margin="10,0,0,0"
-                         Maximum="100"
-                         Minimum="0"
-                         Value="{Binding UploadProgressSize}" />
-        </DockPanel>
+
     </StackPanel>
 </UserControl>

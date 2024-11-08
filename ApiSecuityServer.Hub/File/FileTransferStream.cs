@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using ApiSecuityServer.Hub;
 using ApiSecuityServer.Hubs;
@@ -11,43 +12,42 @@ public sealed class FileTransferStream(
     string fileName,
     long fileSize,
     int bufferSize,
+    int partNumber,
     IClientApi clientApi,
-    FileManger fileManger,
     MultipartReader multipartReader)
 {
+    private readonly Channel<Memory<byte>> _fileStream = Channel.CreateUnbounded<Memory<byte>>();
+
     public long Size { get; } = fileSize;
 
     public string Id { get; } = Guid.NewGuid().ToString();
 
     public string Name { get; } = fileName;
 
+    public long Length => _fileStream.Reader.Count;
+
     public string ConnectionId { get; set; } = id;
 
-    public Channel<byte[]> ChannelStream { get; private set; } = Channel.CreateUnbounded<byte[]>();
-
-    public async ValueTask ReadFileAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// 写入文件
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    public async ValueTask WriterAsync(CancellationToken cancellationToken)
     {
-        var writer = ChannelStream.Writer;
+        var writer = _fileStream.Writer;
 
-        while (true)
+        while (await multipartReader.ReadNextSectionAsync(cancellationToken) is { } section)
         {
-            var section = await multipartReader.ReadNextSectionAsync(cancellationToken);
-
-            if (section == null)
-                break;
-
-            while (true)
+            int readSize;
+            var buffer = new byte[bufferSize].AsMemory();
+            while ((readSize = await section.Body.ReadAsync(buffer, cancellationToken)) != 0)
             {
-                var buffer = new byte[bufferSize];
-                var readSize = await section.Body.ReadAsync(buffer, cancellationToken);
-
-                if (readSize == 0)
-                    break;
-
                 if (readSize == bufferSize)
                     await writer.WriteAsync(buffer, cancellationToken);
                 else
-                    await writer.WriteAsync(buffer.AsSpan(0, readSize).ToArray(), cancellationToken);
+                    await writer.WriteAsync(buffer[..readSize], cancellationToken);
+                
+                buffer = new byte[bufferSize].AsMemory();
             }
         }
     }
@@ -57,7 +57,24 @@ public sealed class FileTransferStream(
     /// </summary>
     public void ReadComplete()
     {
-        ChannelStream.Writer.Complete();
+        _fileStream.Writer.Complete();
+    }
+
+    /// <summary>
+    /// 读取文件
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async IAsyncEnumerable<Memory<byte>> ReadAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var reader = _fileStream.Reader;
+
+        while (await reader.WaitToReadAsync(cancellationToken))
+        {
+            if (reader.TryRead(out var buffer))
+                yield return buffer;
+        }
     }
 
     /// <summary>
@@ -65,22 +82,6 @@ public sealed class FileTransferStream(
     /// </summary>
     public async ValueTask PublishDownloadAsync()
     {
-        await clientApi.PublishDownloadFileAsync(new PublishDownloadMessage(Id, Name, Size));
-    }
-
-    /// <summary>
-    /// 将这个文件添加到当前客户端集合中
-    /// </summary>
-    public bool Add()
-    {
-        return fileManger.AddFile(this);
-    }
-
-    /// <summary>
-    /// 从当前客户端集合中删除文件
-    /// </summary>
-    public void Remove()
-    {
-        fileManger.DeleteAsync(Id);
+        await clientApi.PublishDownloadFileAsync(new PublishDownloadMessage(Id, Name, Size, partNumber));
     }
 }

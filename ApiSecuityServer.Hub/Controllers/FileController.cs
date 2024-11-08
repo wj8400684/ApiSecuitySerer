@@ -53,7 +53,7 @@ public sealed class FileController(IMediator mediator, IOptions<JsonOptions> opt
     }
 
     /// <summary>
-    /// 
+    /// 下载文件
     /// </summary>
     /// <param name="fileId"></param>
     /// <param name="cancellationToken"></param>
