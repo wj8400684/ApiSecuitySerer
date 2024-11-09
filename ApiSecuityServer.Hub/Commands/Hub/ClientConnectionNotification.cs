@@ -73,7 +73,7 @@ internal sealed class ClientConnectionNotificationHandler(
 
         var request = notification.GetHubConnectionRequest();
 
-        if (request.Check())
+        if (!request.Check())
         {
             context.Abort();
             return;
@@ -96,7 +96,7 @@ internal sealed class ClientConnectionNotificationHandler(
         }
 
         var result = await _repository.UpdateAsync(c => c.Id == request.UUID,
-            p => p.SetProperty(c => c.LastActiveTime, newVlue => DateTime.Now), cancellationToken);
+            p => p.SetProperty(c => c.LastActiveTime, newVlue => DateTime.UtcNow), cancellationToken);
 
         logger.LogInformation(result > 0 ? "{0} 更新用户信息成功" : "{0} 更新用户信息失败", request.NickName);
 
