@@ -33,9 +33,8 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
 {
     public async Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
     {
-        var address = request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
-        
         var repository = unitOfWork.Repository<ClientEntity>();
+        var address = request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
 
         var entity = new ClientEntity
         {
