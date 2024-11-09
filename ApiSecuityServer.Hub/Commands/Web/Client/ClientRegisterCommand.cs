@@ -57,7 +57,7 @@ internal sealed class ClientRegisterCommandHandler(
         try
         {
             _dbClient.Add(entity);
-            await dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException) //已经注册
         {
