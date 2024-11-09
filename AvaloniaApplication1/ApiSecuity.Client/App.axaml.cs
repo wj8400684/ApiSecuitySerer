@@ -16,7 +16,7 @@ namespace ApiSecuity.Client;
 
 public partial class App : Application
 {
-    internal static MachineInfo Dveiceinfo = new();
+    internal static MachineInfo DeviceInfo = new();
     internal const string HostUrl = "192.168.124.86:6767";
 
     internal static readonly HttpClient Http = new()
@@ -44,18 +44,18 @@ public partial class App : Application
     /// </summary>
     private async void RegDevices()
     {
-        Dveiceinfo = new MachineInfo();
-        Dveiceinfo.Init();
+        DeviceInfo = new MachineInfo();
+        DeviceInfo.Init();
 
         var register = new ClientRegisterRequest(
-            OSName: Dveiceinfo.OSName,
-            OSVersion: Dveiceinfo.OSVersion,
-            Product: Dveiceinfo.Product,
-            Vendor: Dveiceinfo.Vendor,
-            Processor: Dveiceinfo.Processor,
-            UUID: Dveiceinfo.UUID,
-            Guid: Dveiceinfo.Guid,
-            Memory: (long)Dveiceinfo.Memory);
+            OSName: DeviceInfo.OSName,
+            OSVersion: DeviceInfo.OSVersion,
+            Product: DeviceInfo.Product,
+            Vendor: DeviceInfo.Vendor,
+            Processor: DeviceInfo.Processor,
+            UUID: DeviceInfo.UUID,
+            Guid: DeviceInfo.Guid,
+            Memory: (long)DeviceInfo.Memory);
 
         var jsonContent = new StringContent(
             System.Text.Json.JsonSerializer.Serialize(register, HttpSerializerOptions),

@@ -13,6 +13,15 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
+    <UserControl.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+    
     <StackPanel Margin="20,30,20,0"
                 Spacing="10"
 				VerticalAlignment="Center"

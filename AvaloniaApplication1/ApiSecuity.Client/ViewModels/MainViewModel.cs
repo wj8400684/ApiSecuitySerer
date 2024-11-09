@@ -45,6 +45,7 @@ public partial class MainViewModel : ViewModelBase
         if (!Directory.Exists(FilePath))
             Directory.CreateDirectory(FilePath);
 
+        NickName = App.DeviceInfo.OSName;
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
     }
 
@@ -52,7 +53,7 @@ public partial class MainViewModel : ViewModelBase
     {
         _connection = new HubConnectionBuilder()
             .WithUrl(
-                $"ws://{App.HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}&uuid={App.Dveiceinfo.UUID}")
+                $"ws://{App.HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}&uuid={App.DeviceInfo.UUID}")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
