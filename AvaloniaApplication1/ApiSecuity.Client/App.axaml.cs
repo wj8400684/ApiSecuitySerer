@@ -17,7 +17,7 @@ namespace ApiSecuity.Client;
 public partial class App : Application
 {
     internal static MachineInfo DeviceInfo = new();
-    internal const string HostUrl = "192.168.124.86:6767";
+    internal const string HostUrl = "localhost:6767";
 
     internal static readonly HttpClient Http = new()
     {
