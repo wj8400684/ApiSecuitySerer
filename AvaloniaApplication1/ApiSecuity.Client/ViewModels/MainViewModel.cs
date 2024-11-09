@@ -52,7 +52,7 @@ public partial class MainViewModel : ViewModelBase
     {
         _connection = new HubConnectionBuilder()
             .WithUrl(
-                $"ws://{App.HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
+                $"ws://{App.HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}&uuid={App.Dveiceinfo.UUID}")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
