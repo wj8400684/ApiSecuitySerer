@@ -32,7 +32,9 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
     : ICommandHandler<ClientRegisterCommand>
 {
     public async Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
-    {s
+    {
+        var address = request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
+        
         var repository = unitOfWork.Repository<ClientEntity>();
 
         var entity = new ClientEntity
@@ -45,7 +47,7 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
             Product = request.Product,
             Memory = request.Memory,
             Vendor = request.Vendor,
-            IpAddress = "127.0.0.1",
+            IpAddress = address,
         };
 
         try

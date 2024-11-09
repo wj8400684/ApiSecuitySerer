@@ -23,7 +23,7 @@ public sealed class ClientEntity
     /// <summary>
     /// 
     /// </summary>
-    public required string IpAddress { get; set; }
+    public string? IpAddress { get; set; }
 
     /// <summary>
     /// 
