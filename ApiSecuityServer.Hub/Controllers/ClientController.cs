@@ -20,6 +20,7 @@ public sealed class ClientController(IMediator mediator) : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new ClientRegisterCommand(
+            Serial: request.Serial,
             OSName: request.OSName,
             OSVersion: request.OSVersion,
             Guid: request.Guid,

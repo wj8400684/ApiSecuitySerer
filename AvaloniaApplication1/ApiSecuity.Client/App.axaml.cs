@@ -48,6 +48,7 @@ public partial class App : Application
         DeviceInfo.Init();
 
         var register = new ClientRegisterRequest(
+            Serial: DeviceInfo.Serial,
             OSName: DeviceInfo.OSName,
             OSVersion: DeviceInfo.OSVersion,
             Product: DeviceInfo.Product,

@@ -21,6 +21,11 @@ public sealed class ClientEntity
     public required string OsVersion { get; set; }
 
     /// <summary>
+    /// 序列号
+    /// </summary>
+    public required string Serial { get; set; }
+
+    /// <summary>
     /// 
     /// </summary>
     public string? IpAddress { get; set; }

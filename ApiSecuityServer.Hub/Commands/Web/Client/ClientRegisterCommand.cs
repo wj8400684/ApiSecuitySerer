@@ -9,6 +9,7 @@ namespace ApiSecuityServer.Hub.Commands.Web.Client;
 
 internal readonly record struct ClientRegisterCommand(
     HttpContext HttpContext,
+    string Serial,
     string OSName,
     string OSVersion,
     string? Product,
@@ -40,6 +41,7 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
         {
             Id = request.UUID,
             Guid = request.Guid,
+            Serial = request.Serial,
             OsName = request.OSName,
             OsVersion = request.OSVersion,
             Processor = request.Processor,
