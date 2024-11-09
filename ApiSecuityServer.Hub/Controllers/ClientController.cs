@@ -16,15 +16,19 @@ public sealed class ClientController(IMediator mediator) : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("register")]
-    public async ValueTask<ApiResponse> RegisterClientAsync([FromBody] ClientRegisterRequest request, CancellationToken cancellationToken)
+    public async ValueTask<ApiResponse> RegisterClientAsync([FromBody] ClientRegisterRequest request,
+        CancellationToken cancellationToken)
     {
         var command = new ClientRegisterCommand(
-            ClientId: request.ClientId, 
-            ClientName: request.ClientName, 
-            CpuName: request.CpuName, 
-            Platform: request.Platform, 
-            ProductId: request.ProductId, 
-            OsVersion: request.OsVersion);
+            OSName: request.OSName,
+            OSVersion: request.OSVersion,
+            Guid: request.Guid,
+            UUID: request.UUID,
+            Processor: request.Processor,
+            Vendor: request.Vendor,
+            HttpContext: HttpContext,
+            Product: request.Product,
+            Memory: request.Memory);
 
         return await mediator.Send(command, cancellationToken);
     }

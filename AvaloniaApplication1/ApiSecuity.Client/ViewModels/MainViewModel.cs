@@ -51,14 +51,34 @@ public partial class MainViewModel : ViewModelBase
 
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
 
+        
         var info = new MachineInfo();
         info.Init();
         Console.WriteLine(info.ToJson(true));
-        
         Console.WriteLine(
             $"MachineName {Environment.MachineName} UserDomainName{Environment.UserDomainName} version {Environment.Version} cpu usage {Environment.CpuUsage} ProcessorCount {Environment.ProcessorCount} UserName {Environment.UserName}");
     }
 
+    //{
+    //   "OSName": "Windows 11 专业版",
+    //   "OSVersion": "10.0.26100",
+    //   "Product": "FA880 PRO",
+    //   "Vendor": "FEVM",
+    //   "Processor": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    //   "UUID": "33B39900-8E0A-11EF-B099-54AD601B7301",
+    //   "Guid": "5c6fc885-83a9-425b-80cd-c28a7fa63179",
+    //   "Serial": null,
+    //   "Board": null,
+    //   "DiskID": null,
+    //   "Memory": 67433156608,
+    //   "AvailableMemory": 51833106432,
+    //   "CpuRate": 0.0744,
+    //   "UplinkSpeed": 0,
+    //   "DownlinkSpeed": 0,
+    //   "Temperature": 0,
+    //   "Battery": 1
+    // }
+    
     private void NewHubConnection()
     {
         _connection = new HubConnectionBuilder()

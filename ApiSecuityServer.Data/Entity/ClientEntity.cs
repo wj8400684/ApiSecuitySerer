@@ -11,49 +11,39 @@ public sealed class ClientEntity
     public required string Id { get; set; }
 
     /// <summary>
-    /// 名称
+    /// 系统名称
     /// </summary>
-    public string? Name { get; set; }
-
-    /// <summary>
-    /// 硬盘id
-    /// </summary>
-    public string? DiskId { get; set; }
-
-    /// <summary>
-    /// 系统描述信息
-    /// </summary>
-    public required string SystemCaption { get; set; }
+    public required string OsName { get; set; }
 
     /// <summary>
     /// 系统版本
     /// </summary>
-    public required string SystemVersion { get; set; }
+    public required string OsVersion { get; set; }
 
     /// <summary>
-    /// 登录的系统账号
+    /// 
     /// </summary>
-    public string? SystemUser { get; set; }
+    public string? Product { get; set; }
 
     /// <summary>
-    /// 系统名称
+    /// 设备生产者
     /// </summary>
-    public required string SystemName { get; set; }
+    public string? Vendor { get; set; }
 
     /// <summary>
-    /// mac地址
+    /// 处理器信息
     /// </summary>
-    public required string Mac { get; set; }
+    public string? Processor { get; set; }
 
     /// <summary>
-    /// cpu名称
+    /// 
     /// </summary>
-    public required string CpuName { get; set; }
+    public string? Guid { get; set; }
 
     /// <summary>
-    /// 序列号
+    /// 内存
     /// </summary>
-    public string? SerialNumber { get; set; }
+    public long Memory { get; set; }
 
     /// <summary>
     /// 

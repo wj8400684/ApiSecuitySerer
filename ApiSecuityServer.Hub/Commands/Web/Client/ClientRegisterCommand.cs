@@ -8,22 +8,23 @@ using Microsoft.EntityFrameworkCore;
 namespace ApiSecuityServer.Hub.Commands.Web.Client;
 
 internal readonly record struct ClientRegisterCommand(
-    string ClientId,
-    string ClientName,
-    string CpuName,
-    int Platform,
-    string ProductId,
-    string OsVersion) : ICommand;
+    HttpContext HttpContext,
+    string OSName,
+    string OSVersion,
+    string? Product,
+    string? Vendor,
+    string? Processor,
+    string UUID,
+    string? Guid,
+    long Memory) : ICommand;
 
 internal sealed class ClientRegisterCommandValidation : AbstractValidator<ClientRegisterCommand>
 {
     public ClientRegisterCommandValidation()
     {
-        RuleFor(x => x.ClientId).NotEmpty();
-        RuleFor(x => x.ClientName).NotEmpty();
-        RuleFor(x => x.ProductId).NotEmpty();
-        RuleFor(x => x.OsVersion).NotEmpty();
-        RuleFor(x => x.CpuName).NotEmpty();
+        RuleFor(x => x.OSVersion).NotEmpty();
+        RuleFor(x => x.OSName).NotEmpty();
+        RuleFor(x => x.UUID).NotEmpty();
     }
 }
 
@@ -36,16 +37,15 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
 
         var entity = new ClientEntity
         {
-            Id = request.ClientId,
-            Mac = "",
-            CpuName = "",
-            SystemCaption = "Client Register",
-            SystemName = "Client Register",
-            SystemVersion = "1.0",
-            SystemUser = "System",
-            SerialNumber = "",
-            IpAddress = "",
-            DiskId = "",
+            Id = request.UUID,
+            Guid = request.Guid,
+            OsName = request.OSName,
+            OsVersion = request.OSVersion,
+            Processor = request.Processor,
+            Product = request.Product,
+            Memory = request.Memory,
+            Vendor = request.Vendor,
+            IpAddress = "127.0.0.1",
         };
 
         try
@@ -55,7 +55,7 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
         }
         catch (DbUpdateException) //已经注册
         {
-            logger.LogInformation("已经注册这个id：{0}", request.ClientId);
+            logger.LogInformation("已经注册这个id：{0}", request.UUID);
         }
         catch (Exception e)
         {
