@@ -22,3 +22,5 @@
 /ApiSecuityServer.Data/obj
 /ApiSecuityServer.Hub
 /ApiSecuityServer.Model/bin/Debug/net8.0
+/ApiSecuityServer.Data/bin/Release/net9.0
+/ApiSecuityServer.Model/bin/Release/net8.0
