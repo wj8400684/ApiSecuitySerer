@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ApiSecuityServer.Hub.Hubs;
 
-public sealed class ClientHubContainer
+internal sealed class ClientHubContainer
 {
     private readonly ConcurrentDictionary<string, HubCallerContext> _concurrent = new();
 

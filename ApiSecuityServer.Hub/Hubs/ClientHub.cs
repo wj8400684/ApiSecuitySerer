@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ApiSecuityServer.Hubs;
 
-public sealed class ClientHub(IMediator mediator, ILogger<ClientHub> logger) : Hub<IClientApi>
+internal sealed partial class ClientHub(IMediator mediator) : Hub<IClientApi>
 {
     public override async Task OnConnectedAsync()
     {

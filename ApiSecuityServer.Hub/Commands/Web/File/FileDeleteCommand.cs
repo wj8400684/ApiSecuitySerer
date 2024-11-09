@@ -14,9 +14,6 @@ internal sealed class FileDeleteCommandHandler(FileManger fileManger, ILogger<Fi
 
         var result = await fileManger.DeleteAsync(request.FileId);
 
-        if (!result)
-            return ApiResponse.Error("文件不存在");
-
-        return ApiResponse.Success();
+        return !result ? ApiResponse.Error("文件不存在") : ApiResponse.Success();
     }
 }
