@@ -32,7 +32,7 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
     : ICommandHandler<ClientRegisterCommand>
 {
     public async Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
-    {
+    {s
         var repository = unitOfWork.Repository<ClientEntity>();
 
         var entity = new ClientEntity

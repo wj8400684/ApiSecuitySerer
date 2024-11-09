@@ -6,7 +6,7 @@ namespace ApiSecuityServer.Data.Entity;
 public sealed class ClientEntity
 {
     /// <summary>
-    /// 
+    ///设备id
     /// </summary>
     public required string Id { get; set; }
 
@@ -19,6 +19,11 @@ public sealed class ClientEntity
     /// 系统版本
     /// </summary>
     public required string OsVersion { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public required string IpAddress { get; set; }
 
     /// <summary>
     /// 
@@ -44,11 +49,6 @@ public sealed class ClientEntity
     /// 内存
     /// </summary>
     public long Memory { get; set; }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public required string IpAddress { get; set; }
 
     /// <summary>
     /// 注册时间
