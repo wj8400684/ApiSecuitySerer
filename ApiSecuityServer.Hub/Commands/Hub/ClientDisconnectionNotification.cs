@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace ApiSecuityServer.Commands.Hub;
 
-public readonly record struct ClientDisconnectionNotification(HubCallerContext Context, IGroupManager Group)
+internal readonly record struct ClientDisconnectionNotification(HubCallerContext Context, IGroupManager Group)
     : INotification;
 
 internal sealed class ClientDisconnectionNotificationHandler(

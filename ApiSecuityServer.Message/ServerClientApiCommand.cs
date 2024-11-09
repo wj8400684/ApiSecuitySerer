@@ -21,4 +21,9 @@ public enum ServerClientApiCommand
     /// 推送断开连接通知
     /// </summary>
     DisConnectionEvent,
+    
+    /// <summary>
+    /// 发送消息
+    /// </summary>
+    SendMessage,
 }
