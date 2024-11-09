@@ -1,6 +1,9 @@
-﻿using ApiSecuityServer.Hub.Application.Abstractions.Messaging;
+﻿using ApiSecuityServer.Data.Entity;
+using ApiSecuityServer.Hub.Application.Abstractions.Messaging;
 using ApiSecuityServer.Model;
+using EntityFrameworkCore.UnitOfWork.Interfaces;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiSecuityServer.Hub.Commands.Web.Client;
 
@@ -24,11 +27,42 @@ internal sealed class ClientRegisterCommandValidation : AbstractValidator<Client
     }
 }
 
-internal sealed class ClientRegisterCommandHandler(ILogger<ClientRegisterCommandHandler> logger)
+internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogger<ClientRegisterCommandHandler> logger)
     : ICommandHandler<ClientRegisterCommand>
 {
-    public Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var repository = unitOfWork.Repository<ClientEntity>();
+
+        var entity = new ClientEntity
+        {
+            Id = request.ClientId,
+            Mac = "",
+            CpuName = "",
+            SystemCaption = "Client Register",
+            SystemName = "Client Register",
+            SystemVersion = "1.0",
+            SystemUser = "System",
+            SerialNumber = "",
+            IpAddress = "",
+            DiskId = "",
+        };
+
+        try
+        {
+            repository.Add(entity);
+            await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+        }
+        catch (DbUpdateException) //已经注册
+        {
+            logger.LogInformation("已经注册这个id：{0}", request.ClientId);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "注册发生异常");
+            return ApiResponse.Error("注册失败，请重试");
+        }
+
+        return ApiResponse.Success();
     }
 }

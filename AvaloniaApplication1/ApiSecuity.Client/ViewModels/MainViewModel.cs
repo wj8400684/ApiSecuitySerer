@@ -15,6 +15,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using NewLife;
+using NewLife.Log;
+using NewLife.Serialization;
 
 namespace ApiSecuity.Client.ViewModels;
 
@@ -47,6 +50,13 @@ public partial class MainViewModel : ViewModelBase
             Directory.CreateDirectory(FilePath);
 
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
+
+        var info = new MachineInfo();
+        info.Init();
+        Console.WriteLine(info.ToJson(true));
+        
+        Console.WriteLine(
+            $"MachineName {Environment.MachineName} UserDomainName{Environment.UserDomainName} version {Environment.Version} cpu usage {Environment.CpuUsage} ProcessorCount {Environment.ProcessorCount} UserName {Environment.UserName}");
     }
 
     private void NewHubConnection()
