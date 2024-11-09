@@ -1,3 +1,4 @@
+using ApiSecuityServer.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiSecuityServer.Data;
@@ -13,4 +14,6 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
+
+    public DbSet<ClientEntity> DbClient { get; set; }
 }

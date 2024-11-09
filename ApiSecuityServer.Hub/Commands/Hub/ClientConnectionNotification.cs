@@ -1,11 +1,11 @@
+using ApiSecuityServer.Data;
 using ApiSecuityServer.Data.Entity;
 using ApiSecuityServer.Hub.Hubs;
 using ApiSecuityServer.Hubs;
 using ApiSecuityServer.Message;
-using EntityFrameworkCore.Repository.Interfaces;
-using EntityFrameworkCore.UnitOfWork.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiSecuityServer.Commands.Hub;
 
@@ -49,12 +49,12 @@ internal readonly record struct ClientConnectionNotification(
 }
 
 internal sealed class ClientConnectionNotificationHandler(
-    IUnitOfWork unitOfWork,
+    ApplicationDbContext dbContext,
     ILogger<ClientConnectionNotificationHandler> logger,
     IHubContext<ClientHub, IClientApi> hubContext,
     ClientHubContainer container) : INotificationHandler<ClientConnectionNotification>
 {
-    private readonly IRepository<ClientEntity> _repository = unitOfWork.Repository<ClientEntity>();
+    private readonly DbSet<ClientEntity> _dbClient = dbContext.DbClient;
 
     public async Task Handle(ClientConnectionNotification notification, CancellationToken cancellationToken)
     {
@@ -85,9 +85,7 @@ internal sealed class ClientConnectionNotificationHandler(
 
         #region 从数据库获取客户端信息
 
-        var client =
-            await _repository.SingleOrDefaultAsync(_repository.SingleResultQuery().AndFilter(c => c.Id == request.UUID),
-                cancellationToken); //获取客户端信息
+        var client = await _dbClient.SingleOrDefaultAsync(c => c.Id == request.UUID, cancellationToken);
 
         if (client == null) //没有注册关闭连接
         {
@@ -95,8 +93,10 @@ internal sealed class ClientConnectionNotificationHandler(
             return;
         }
 
-        var result = await _repository.UpdateAsync(c => c.Id == request.UUID,
-            p => p.SetProperty(c => c.LastActiveTime, newVlue => DateTime.UtcNow), cancellationToken);
+        var result = await _dbClient.Where(s => s.Id == request.UUID)
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(c => c.LastActiveTime, newVlue => DateTime.UtcNow),
+                cancellationToken: cancellationToken);
 
         logger.LogInformation(result > 0 ? "{0} 更新用户信息成功" : "{0} 更新用户信息失败", request.NickName);
 

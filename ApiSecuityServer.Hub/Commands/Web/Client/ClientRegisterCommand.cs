@@ -1,7 +1,7 @@
-﻿using ApiSecuityServer.Data.Entity;
+﻿using ApiSecuityServer.Data;
+using ApiSecuityServer.Data.Entity;
 using ApiSecuityServer.Hub.Application.Abstractions.Messaging;
 using ApiSecuityServer.Model;
-using EntityFrameworkCore.UnitOfWork.Interfaces;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,12 +29,15 @@ internal sealed class ClientRegisterCommandValidation : AbstractValidator<Client
     }
 }
 
-internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogger<ClientRegisterCommandHandler> logger)
+internal sealed class ClientRegisterCommandHandler(
+    ApplicationDbContext dbContext,
+    ILogger<ClientRegisterCommandHandler> logger)
     : ICommandHandler<ClientRegisterCommand>
 {
+    private readonly DbSet<ClientEntity> _dbClient = dbContext.DbClient;
+
     public async Task<ApiResponse> Handle(ClientRegisterCommand request, CancellationToken cancellationToken)
     {
-        var repository = unitOfWork.Repository<ClientEntity>();
         var address = request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
 
         var entity = new ClientEntity
@@ -53,8 +56,8 @@ internal sealed class ClientRegisterCommandHandler(IUnitOfWork unitOfWork, ILogg
 
         try
         {
-            repository.Add(entity);
-            await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+            _dbClient.Add(entity);
+            await dbContext.SaveChangesAsync(cancellationToken: cancellationToken);
         }
         catch (DbUpdateException) //已经注册
         {
