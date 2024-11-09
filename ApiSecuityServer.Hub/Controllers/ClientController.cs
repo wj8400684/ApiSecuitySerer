@@ -3,7 +3,7 @@ using ApiSecuityServer.Model;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiSecuityServer.Hub.Controllers;
+namespace ApiSecuityServer.Controllers;
 
 [Route("api/client")]
 public sealed class ClientController(IMediator mediator) : ControllerBase

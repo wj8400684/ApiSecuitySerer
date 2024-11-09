@@ -25,5 +25,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\ApiSecuityServer.Message\ApiSecuityServer.Message.csproj" />
+      <ProjectReference Include="..\..\ApiSecuityServer.Model\ApiSecuityServer.Model.csproj" />
     </ItemGroup>
 </Project>

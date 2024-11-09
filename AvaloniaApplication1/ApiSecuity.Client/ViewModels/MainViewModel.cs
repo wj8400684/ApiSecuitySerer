@@ -15,16 +15,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using NewLife;
-using NewLife.Log;
-using NewLife.Serialization;
 
 namespace ApiSecuity.Client.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
     private IStorageProvider _storageProvider = null!;
-    private const string HostUrl = "192.168.124.86:6767";
     private HubConnection _connection = null!;
     private readonly SemaphoreSlim _semaphore = new(1);
     private readonly AsyncQueue<DownloadFileMessage> _downloadQueue = new();
@@ -50,40 +46,13 @@ public partial class MainViewModel : ViewModelBase
             Directory.CreateDirectory(FilePath);
 
         ThreadPool.QueueUserWorkItem(callBack => StartDownloadAsync());
-
-        
-        var info = new MachineInfo();
-        info.Init();
-        Console.WriteLine(info.ToJson(true));
-        Console.WriteLine(
-            $"MachineName {Environment.MachineName} UserDomainName{Environment.UserDomainName} version {Environment.Version} cpu usage {Environment.CpuUsage} ProcessorCount {Environment.ProcessorCount} UserName {Environment.UserName}");
     }
 
-    //{
-    //   "OSName": "Windows 11 专业版",
-    //   "OSVersion": "10.0.26100",
-    //   "Product": "FA880 PRO",
-    //   "Vendor": "FEVM",
-    //   "Processor": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
-    //   "UUID": "33B39900-8E0A-11EF-B099-54AD601B7301",
-    //   "Guid": "5c6fc885-83a9-425b-80cd-c28a7fa63179",
-    //   "Serial": null,
-    //   "Board": null,
-    //   "DiskID": null,
-    //   "Memory": 67433156608,
-    //   "AvailableMemory": 51833106432,
-    //   "CpuRate": 0.0744,
-    //   "UplinkSpeed": 0,
-    //   "DownlinkSpeed": 0,
-    //   "Temperature": 0,
-    //   "Battery": 1
-    // }
-    
     private void NewHubConnection()
     {
         _connection = new HubConnectionBuilder()
             .WithUrl(
-                $"ws://{HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
+                $"ws://{App.HostUrl}/api/chat?&platform={Random.Shared.Next(1, 3)}&groupName=local&user=wujun&nickName={NickName}")
             .AddJsonProtocol()
             .ConfigureJsonHubOptions()
             .Build();
@@ -141,7 +110,7 @@ public partial class MainViewModel : ViewModelBase
         {
             await NotificationHelper.ShowInfoAsync($"开始下载");
             TotalFileSize = 1000000;
-            var url = $"http://{HostUrl}/api/file/download/{TargetFileId}";
+            var url = $"http://{App.HostUrl}/api/file/download/{TargetFileId}";
             //获取到文件总大小 通过head请求
             var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
             using var client = new HttpClient(processMessageHander);
@@ -199,7 +168,7 @@ public partial class MainViewModel : ViewModelBase
 
                 //var url = $"http://{HostUrl}/api/file/upload";
                 var url1 =
-                    $"http://{HostUrl}/api/file/upload?ConnectionId={SelectedConnection.Id}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
+                    $"http://{App.HostUrl}/api/file/upload?ConnectionId={SelectedConnection.Id}&FileName={folder.Name}&PartNumber={0}&Chunks={chunks}&Size=81960&Start={1}&End={2}&Total={stream.Length}";
 
                 var partNumber = 0;
                 var start = 0;
@@ -434,16 +403,13 @@ public partial class MainViewModel : ViewModelBase
                 DownloadDescription = $"({arg.FileName}-{sizeDescription})";
 
                 DownloadProgressSize = 0;
-                var url = $"http://{HostUrl}/api/file/download/{arg.FileId}";
+                var url = $"http://{App.HostUrl}/api/file/download/{arg.FileId}";
                 //获取到文件总大小 通过head请求
-                var processMessageHander = new ProgressMessageHandler(new HttpClientHandler());
-                using var client = new HttpClient(processMessageHander);
-                processMessageHander.HttpReceiveProgress += OnHttpReceiveProgress;
 
                 await using var fileStream =
                     new FileStream(path, FileMode.OpenOrCreate,
                         FileAccess.Write);
-                using var httpResponse = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                using var httpResponse = await App.Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
                 await using var responseStream = await httpResponse.Content.ReadAsStreamAsync();
 
                 int bytesRead;
